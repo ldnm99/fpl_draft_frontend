@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Draft League</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #ffffff; /* White text */
+        }
+        header {
+            background-color: #000000; /* Black header */
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 0;
+        }
+        .container {
+            padding: 20px;
+            text-align: center;
+        }
+        h2 {
+            color: #e0e0e0; /* Light gray text for headings */
+        }
+        .standings-section {
+            margin: 30px 0;
+        }
+        .standings-section img {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #ffffff;
+            border-radius: 8px;
+        }
+        .team-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .team-buttons button {
+            background-color: #333333; /* Dark button background */
+            color: #ffffff; /* White text */
+            border: 1px solid #ffffff;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%; /* Make buttons responsive */
+            max-width: 200px; /* Limit button width */
+        }
+        .team-buttons button:hover {
+            background-color: #444444; /* Slightly lighter background on hover */
+        }
+        footer {
+            background-color: #000000;
+            color: #ffffff;
+            text-align: center;
+            padding: 15px 0;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        .welcome-text {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #333333;
+            border-radius: 5px;
+            display: inline-block;
+            max-width: 80%;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em; /* Adjust font size on smaller screens */
+            }
+            .container {
+                padding: 10px;
+            }
+            .team-buttons button {
+                font-size: 0.9em;
+                width: 90%; /* Allow buttons to occupy more width */
+            }
+            iframe {
+                width: 100%;
+                height: 300px; /* Make iframes responsive */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FPL Draft League</h1>
+        <p><strong>There Can Be Only One</strong></p>
+    </header>
+    <div class="container">
+        <!-- Welcome text section -->
+        <section class="welcome-text">
+            <p><strong>Welcome to the There Can Be Only One Draft League!</strong></p>
+            <p>This competitive Fantasy Premier League pits managers against each other as they draft their teams and battle it out all season long.</p>
+            <p>Now in its third thrilling edition, the big question remains: will the reigning two-time champion, Los Porro Hermanos, finally be dethroned?</p>
+            <p>League data is updated every Monday—or sooner upon request.</p>
+        </section>
+        <section class="standings-section">
+            <h2>Current League Standings</h2>
+            <iframe src="https://ldnm99.github.io/draft_fpl/Graphs/league_standings.html" width="600" height="400" frameborder="0"></iframe>
+        </section>
+        <section class="standings-section">
+            <h2>League Standings per Gameweek</h2>
+            <iframe src="https://ldnm99.github.io/draft_fpl/Graphs/cumulative_points_chart.html" width="600" height="400" frameborder="0"></iframe>
+        </section>
+        <section class="standings-section">
+            <h2>League Points per Gameweek</h2>
+            <iframe src="https://ldnm99.github.io/draft_fpl/Graphs/gameweek_points_chart.html" width="600" height="400" frameborder="0"></iframe>
+        </section>
+        <section>
+            <h2>Team's Data</h2>
+            <div class="team-buttons">
+                <button>Avengers Assemble</button>
+                <button>Eze Come Eze Go</button>
+                <button>Jurojcav2</button>
+                <button>De tu Madre FC</button>
+                <button>Los Porro Hermanos</button>
+            </div>
+        </section>
+    </div>
+    <footer>
+        <p>&copy; 2024 FPL Loure. All rights reserved.</p>
+        <p>This website is not officially affiliated with Fantasy Premier League.</p>
+    </footer>
+</body>
+</html>
