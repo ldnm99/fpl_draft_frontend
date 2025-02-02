@@ -35,8 +35,9 @@
             max-width: 900px;
         }
         iframe {
-            width: 45%;
-            height: 250px;
+            width: 100%;
+            height: auto;
+            min-height: 250px;
             border: none;
             background: black;
         }
@@ -75,7 +76,9 @@
         
         <h2>Current League Standings:</h2>
         <div class="content">
-            <iframe src="https://ldnm99.github.io/draft_fpl/Graphs/league_standings.html"></iframe>
+            <div class="table-container">
+                <iframe src="https://ldnm99.github.io/draft_fpl/Graphs/league_standings.html"></iframe>
+            </div>
             <div class="buttons">
                 <a href="#" class="btn">League Data</a>
                 <a href="#" class="btn">Jurojocav2</a>
