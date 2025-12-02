@@ -1,0 +1,381 @@
+event,team_h,team_a,team_h_difficulty,team_a_difficulty,kickoff_time,team_h_name,team_a_name
+1,12,4,3,5,2025-08-15T19:00:00Z,Liverpool,Bournemouth
+1,2,15,3,4,2025-08-16T11:30:00Z,Aston Villa,Newcastle
+1,6,10,3,3,2025-08-16T14:00:00Z,Brighton,Fulham
+1,18,3,2,3,2025-08-16T14:00:00Z,Spurs,Burnley
+1,17,19,2,2,2025-08-16T14:00:00Z,Sunderland,West Ham
+1,20,13,4,3,2025-08-16T16:30:00Z,Wolves,Man City
+1,7,8,3,4,2025-08-17T13:00:00Z,Chelsea,Crystal Palace
+1,16,5,3,3,2025-08-17T13:00:00Z,Nott'm Forest,Brentford
+1,14,1,4,3,2025-08-17T15:30:00Z,Man Utd,Arsenal
+1,11,9,2,2,2025-08-18T19:00:00Z,Leeds,Everton
+2,19,7,3,2,2025-08-22T19:00:00Z,West Ham,Chelsea
+2,13,18,3,4,2025-08-23T11:30:00Z,Man City,Spurs
+2,4,20,2,3,2025-08-23T14:00:00Z,Bournemouth,Wolves
+2,5,2,3,3,2025-08-23T14:00:00Z,Brentford,Aston Villa
+2,3,17,2,2,2025-08-23T14:00:00Z,Burnley,Sunderland
+2,1,11,2,4,2025-08-23T16:30:00Z,Arsenal,Leeds
+2,8,16,3,3,2025-08-24T13:00:00Z,Crystal Palace,Nott'm Forest
+2,9,6,3,3,2025-08-24T13:00:00Z,Everton,Brighton
+2,10,14,3,3,2025-08-24T15:30:00Z,Fulham,Man Utd
+2,15,12,4,4,2025-08-25T19:00:00Z,Newcastle,Liverpool
+3,7,10,3,4,2025-08-30T11:30:00Z,Chelsea,Fulham
+3,14,3,2,3,2025-08-30T14:00:00Z,Man Utd,Burnley
+3,18,4,3,3,2025-08-30T14:00:00Z,Spurs,Bournemouth
+3,17,5,3,2,2025-08-30T14:00:00Z,Sunderland,Brentford
+3,20,9,2,3,2025-08-30T14:00:00Z,Wolves,Everton
+3,11,15,3,2,2025-08-30T16:30:00Z,Leeds,Newcastle
+3,6,13,4,3,2025-08-31T13:00:00Z,Brighton,Man City
+3,16,19,2,3,2025-08-31T13:00:00Z,Nott'm Forest,West Ham
+3,12,1,4,5,2025-08-31T15:30:00Z,Liverpool,Arsenal
+3,2,8,3,4,2025-08-31T18:00:00Z,Aston Villa,Crystal Palace
+4,1,16,3,4,2025-09-13T11:30:00Z,Arsenal,Nott'm Forest
+4,4,6,3,3,2025-09-13T14:00:00Z,Bournemouth,Brighton
+4,8,17,2,3,2025-09-13T14:00:00Z,Crystal Palace,Sunderland
+4,9,2,3,3,2025-09-13T14:00:00Z,Everton,Aston Villa
+4,10,11,2,3,2025-09-13T14:00:00Z,Fulham,Leeds
+4,15,20,2,4,2025-09-13T14:00:00Z,Newcastle,Wolves
+4,19,18,3,2,2025-09-13T16:30:00Z,West Ham,Spurs
+4,5,7,3,3,2025-09-13T19:00:00Z,Brentford,Chelsea
+4,3,12,4,2,2025-09-14T13:00:00Z,Burnley,Liverpool
+4,13,14,3,4,2025-09-14T15:30:00Z,Man City,Man Utd
+5,12,9,2,5,2025-09-20T11:30:00Z,Liverpool,Everton
+5,6,18,3,3,2025-09-20T14:00:00Z,Brighton,Spurs
+5,3,16,3,2,2025-09-20T14:00:00Z,Burnley,Nott'm Forest
+5,19,8,3,2,2025-09-20T14:00:00Z,West Ham,Crystal Palace
+5,20,11,2,3,2025-09-20T14:00:00Z,Wolves,Leeds
+5,14,7,3,3,2025-09-20T16:30:00Z,Man Utd,Chelsea
+5,10,5,3,3,2025-09-20T19:00:00Z,Fulham,Brentford
+5,4,15,3,3,2025-09-21T13:00:00Z,Bournemouth,Newcastle
+5,17,2,3,2,2025-09-21T13:00:00Z,Sunderland,Aston Villa
+5,1,13,4,4,2025-09-21T15:30:00Z,Arsenal,Man City
+6,5,14,3,3,2025-09-27T11:30:00Z,Brentford,Man Utd
+6,7,6,3,4,2025-09-27T14:00:00Z,Chelsea,Brighton
+6,8,12,4,3,2025-09-27T14:00:00Z,Crystal Palace,Liverpool
+6,11,4,3,2,2025-09-27T14:00:00Z,Leeds,Bournemouth
+6,13,3,2,4,2025-09-27T14:00:00Z,Man City,Burnley
+6,16,17,2,3,2025-09-27T16:30:00Z,Nott'm Forest,Sunderland
+6,18,20,2,3,2025-09-27T19:00:00Z,Spurs,Wolves
+6,2,10,3,4,2025-09-28T13:00:00Z,Aston Villa,Fulham
+6,15,1,4,4,2025-09-28T15:30:00Z,Newcastle,Arsenal
+6,9,19,2,3,2025-09-29T19:00:00Z,Everton,West Ham
+7,4,10,3,3,2025-10-03T19:00:00Z,Bournemouth,Fulham
+7,11,18,3,2,2025-10-04T11:30:00Z,Leeds,Spurs
+7,1,19,2,4,2025-10-04T14:00:00Z,Arsenal,West Ham
+7,14,17,2,3,2025-10-04T14:00:00Z,Man Utd,Sunderland
+7,7,12,4,4,2025-10-04T16:30:00Z,Chelsea,Liverpool
+7,2,3,2,4,2025-10-05T13:00:00Z,Aston Villa,Burnley
+7,9,8,3,3,2025-10-05T13:00:00Z,Everton,Crystal Palace
+7,15,16,3,4,2025-10-05T13:00:00Z,Newcastle,Nott'm Forest
+7,20,6,3,3,2025-10-05T13:00:00Z,Wolves,Brighton
+7,5,13,4,3,2025-10-05T15:30:00Z,Brentford,Man City
+8,16,7,3,3,2025-10-18T11:30:00Z,Nott'm Forest,Chelsea
+8,6,15,3,3,2025-10-18T14:00:00Z,Brighton,Newcastle
+8,3,11,2,2,2025-10-18T14:00:00Z,Burnley,Leeds
+8,8,4,3,3,2025-10-18T14:00:00Z,Crystal Palace,Bournemouth
+8,13,9,2,4,2025-10-18T14:00:00Z,Man City,Everton
+8,17,20,2,2,2025-10-18T14:00:00Z,Sunderland,Wolves
+8,10,1,4,3,2025-10-18T16:30:00Z,Fulham,Arsenal
+8,18,2,3,3,2025-10-19T13:00:00Z,Spurs,Aston Villa
+8,12,14,3,5,2025-10-19T15:30:00Z,Liverpool,Man Utd
+8,19,5,3,2,2025-10-20T19:00:00Z,West Ham,Brentford
+9,11,19,2,2,2025-10-24T19:00:00Z,Leeds,West Ham
+9,7,17,2,4,2025-10-25T14:00:00Z,Chelsea,Sunderland
+9,15,10,3,4,2025-10-25T14:00:00Z,Newcastle,Fulham
+9,14,6,3,3,2025-10-25T16:30:00Z,Man Utd,Brighton
+9,5,12,4,3,2025-10-25T19:00:00Z,Brentford,Liverpool
+9,1,8,3,4,2025-10-26T14:00:00Z,Arsenal,Crystal Palace
+9,2,13,4,4,2025-10-26T14:00:00Z,Aston Villa,Man City
+9,4,16,3,3,2025-10-26T14:00:00Z,Bournemouth,Nott'm Forest
+9,20,3,2,3,2025-10-26T14:00:00Z,Wolves,Burnley
+9,9,18,3,3,2025-10-26T16:30:00Z,Everton,Spurs
+10,6,11,2,3,2025-11-01T15:00:00Z,Brighton,Leeds
+10,3,1,4,2,2025-11-01T15:00:00Z,Burnley,Arsenal
+10,8,5,3,3,2025-11-01T15:00:00Z,Crystal Palace,Brentford
+10,10,20,2,3,2025-11-01T15:00:00Z,Fulham,Wolves
+10,16,14,3,3,2025-11-01T15:00:00Z,Nott'm Forest,Man Utd
+10,18,7,3,3,2025-11-01T17:30:00Z,Spurs,Chelsea
+10,12,2,3,5,2025-11-01T20:00:00Z,Liverpool,Aston Villa
+10,19,15,3,2,2025-11-02T14:00:00Z,West Ham,Newcastle
+10,13,4,3,4,2025-11-02T16:30:00Z,Man City,Bournemouth
+10,17,9,2,2,2025-11-03T20:00:00Z,Sunderland,Everton
+11,18,14,3,3,2025-11-08T12:30:00Z,Spurs,Man Utd
+11,9,10,3,3,2025-11-08T15:00:00Z,Everton,Fulham
+11,19,3,2,2,2025-11-08T15:00:00Z,West Ham,Burnley
+11,17,1,4,2,2025-11-08T17:30:00Z,Sunderland,Arsenal
+11,7,20,2,4,2025-11-08T20:00:00Z,Chelsea,Wolves
+11,2,4,3,4,2025-11-09T14:00:00Z,Aston Villa,Bournemouth
+11,5,15,3,3,2025-11-09T14:00:00Z,Brentford,Newcastle
+11,8,6,3,3,2025-11-09T14:00:00Z,Crystal Palace,Brighton
+11,16,11,2,3,2025-11-09T14:00:00Z,Nott'm Forest,Leeds
+11,13,12,4,4,2025-11-09T16:30:00Z,Man City,Liverpool
+12,3,7,3,2,2025-11-22T12:30:00Z,Burnley,Chelsea
+12,4,19,2,3,2025-11-22T15:00:00Z,Bournemouth,West Ham
+12,6,5,3,3,2025-11-22T15:00:00Z,Brighton,Brentford
+12,10,17,2,3,2025-11-22T15:00:00Z,Fulham,Sunderland
+12,12,16,3,5,2025-11-22T15:00:00Z,Liverpool,Nott'm Forest
+12,20,8,3,3,2025-11-22T15:00:00Z,Wolves,Crystal Palace
+12,15,13,4,4,2025-11-22T17:30:00Z,Newcastle,Man City
+12,11,2,3,2,2025-11-23T14:00:00Z,Leeds,Aston Villa
+12,1,18,3,4,2025-11-23T16:30:00Z,Arsenal,Spurs
+12,14,9,2,3,2025-11-24T20:00:00Z,Man Utd,Everton
+13,5,3,2,3,2025-11-29T15:00:00Z,Brentford,Burnley
+13,13,11,2,4,2025-11-29T15:00:00Z,Man City,Leeds
+13,17,4,3,2,2025-11-29T15:00:00Z,Sunderland,Bournemouth
+13,9,15,3,3,2025-11-29T17:30:00Z,Everton,Newcastle
+13,18,10,3,3,2025-11-29T20:00:00Z,Spurs,Fulham
+13,8,14,3,3,2025-11-30T12:00:00Z,Crystal Palace,Man Utd
+13,2,20,2,4,2025-11-30T14:05:00Z,Aston Villa,Wolves
+13,16,6,3,3,2025-11-30T14:05:00Z,Nott'm Forest,Brighton
+13,19,12,4,2,2025-11-30T14:05:00Z,West Ham,Liverpool
+13,7,1,4,4,2025-11-30T16:30:00Z,Chelsea,Arsenal
+14,4,9,2,3,2025-12-02T19:30:00Z,Bournemouth,Everton
+14,10,13,4,3,2025-12-02T19:30:00Z,Fulham,Man City
+14,15,18,3,4,2025-12-02T20:15:00Z,Newcastle,Spurs
+14,1,5,3,4,2025-12-03T19:30:00Z,Arsenal,Brentford
+14,6,2,3,3,2025-12-03T19:30:00Z,Brighton,Aston Villa
+14,3,8,3,2,2025-12-03T19:30:00Z,Burnley,Crystal Palace
+14,20,16,3,3,2025-12-03T19:30:00Z,Wolves,Nott'm Forest
+14,11,7,3,2,2025-12-03T20:15:00Z,Leeds,Chelsea
+14,12,17,2,5,2025-12-03T20:15:00Z,Liverpool,Sunderland
+14,14,19,2,3,2025-12-04T20:00:00Z,Man Utd,West Ham
+15,2,1,4,4,2025-12-06T12:30:00Z,Aston Villa,Arsenal
+15,4,7,3,3,2025-12-06T15:00:00Z,Bournemouth,Chelsea
+15,9,16,3,3,2025-12-06T15:00:00Z,Everton,Nott'm Forest
+15,13,17,2,4,2025-12-06T15:00:00Z,Man City,Sunderland
+15,15,3,2,4,2025-12-06T15:00:00Z,Newcastle,Burnley
+15,18,5,3,3,2025-12-06T15:00:00Z,Spurs,Brentford
+15,11,12,4,2,2025-12-06T17:30:00Z,Leeds,Liverpool
+15,6,19,2,3,2025-12-07T14:00:00Z,Brighton,West Ham
+15,10,8,3,3,2025-12-07T16:30:00Z,Fulham,Crystal Palace
+15,20,14,3,3,2025-12-08T20:00:00Z,Wolves,Man Utd
+16,7,9,2,4,2025-12-13T15:00:00Z,Chelsea,Everton
+16,12,6,3,5,2025-12-13T15:00:00Z,Liverpool,Brighton
+16,3,10,3,2,2025-12-13T17:30:00Z,Burnley,Fulham
+16,1,20,2,4,2025-12-13T20:00:00Z,Arsenal,Wolves
+16,8,13,4,3,2025-12-14T14:00:00Z,Crystal Palace,Man City
+16,16,18,3,3,2025-12-14T14:00:00Z,Nott'm Forest,Spurs
+16,17,15,3,2,2025-12-14T14:00:00Z,Sunderland,Newcastle
+16,19,2,3,2,2025-12-14T14:00:00Z,West Ham,Aston Villa
+16,5,11,2,3,2025-12-14T16:30:00Z,Brentford,Leeds
+16,14,4,3,3,2025-12-15T20:00:00Z,Man Utd,Bournemouth
+17,15,7,3,4,2025-12-20T12:30:00Z,Newcastle,Chelsea
+17,4,3,2,3,2025-12-20T15:00:00Z,Bournemouth,Burnley
+17,6,17,2,3,2025-12-20T15:00:00Z,Brighton,Sunderland
+17,13,19,2,4,2025-12-20T15:00:00Z,Man City,West Ham
+17,20,5,3,3,2025-12-20T15:00:00Z,Wolves,Brentford
+17,18,12,4,3,2025-12-20T17:30:00Z,Spurs,Liverpool
+17,9,1,4,3,2025-12-21T14:00:00Z,Everton,Arsenal
+17,11,8,3,2,2025-12-21T14:00:00Z,Leeds,Crystal Palace
+17,2,14,3,4,2025-12-21T16:30:00Z,Aston Villa,Man Utd
+17,10,16,3,3,2025-12-22T20:00:00Z,Fulham,Nott'm Forest
+18,1,6,3,4,2025-12-27T15:00:00Z,Arsenal,Brighton
+18,5,4,3,3,2025-12-27T15:00:00Z,Brentford,Bournemouth
+18,3,9,2,2,2025-12-27T15:00:00Z,Burnley,Everton
+18,7,2,3,4,2025-12-27T15:00:00Z,Chelsea,Aston Villa
+18,8,18,3,3,2025-12-27T15:00:00Z,Crystal Palace,Spurs
+18,12,20,2,5,2025-12-27T15:00:00Z,Liverpool,Wolves
+18,14,15,3,3,2025-12-27T15:00:00Z,Man Utd,Newcastle
+18,16,13,4,3,2025-12-27T15:00:00Z,Nott'm Forest,Man City
+18,17,11,2,2,2025-12-27T15:00:00Z,Sunderland,Leeds
+18,19,10,3,2,2025-12-27T15:00:00Z,West Ham,Fulham
+19,1,2,3,4,2025-12-30T20:00:00Z,Arsenal,Aston Villa
+19,5,18,3,3,2025-12-30T20:00:00Z,Brentford,Spurs
+19,3,15,3,2,2025-12-30T20:00:00Z,Burnley,Newcastle
+19,7,4,3,4,2025-12-30T20:00:00Z,Chelsea,Bournemouth
+19,8,10,3,3,2025-12-30T20:00:00Z,Crystal Palace,Fulham
+19,12,11,2,5,2025-12-30T20:00:00Z,Liverpool,Leeds
+19,14,20,2,3,2025-12-30T20:00:00Z,Man Utd,Wolves
+19,16,9,2,3,2025-12-30T20:00:00Z,Nott'm Forest,Everton
+19,17,13,4,2,2025-12-30T20:00:00Z,Sunderland,Man City
+19,19,6,3,2,2025-12-30T20:00:00Z,West Ham,Brighton
+20,2,16,3,4,2026-01-03T15:00:00Z,Aston Villa,Nott'm Forest
+20,4,1,4,3,2026-01-03T15:00:00Z,Bournemouth,Arsenal
+20,6,3,2,3,2026-01-03T15:00:00Z,Brighton,Burnley
+20,9,5,3,3,2026-01-03T15:00:00Z,Everton,Brentford
+20,10,12,4,3,2026-01-03T15:00:00Z,Fulham,Liverpool
+20,11,14,3,2,2026-01-03T15:00:00Z,Leeds,Man Utd
+20,13,7,3,4,2026-01-03T15:00:00Z,Man City,Chelsea
+20,15,8,3,4,2026-01-03T15:00:00Z,Newcastle,Crystal Palace
+20,18,17,2,3,2026-01-03T15:00:00Z,Spurs,Sunderland
+20,20,19,2,3,2026-01-03T15:00:00Z,Wolves,West Ham
+21,1,12,4,4,2026-01-07T20:00:00Z,Arsenal,Liverpool
+21,4,18,3,3,2026-01-07T20:00:00Z,Bournemouth,Spurs
+21,5,17,2,3,2026-01-07T20:00:00Z,Brentford,Sunderland
+21,3,14,3,2,2026-01-07T20:00:00Z,Burnley,Man Utd
+21,8,2,3,3,2026-01-07T20:00:00Z,Crystal Palace,Aston Villa
+21,9,20,2,3,2026-01-07T20:00:00Z,Everton,Wolves
+21,10,7,3,3,2026-01-07T20:00:00Z,Fulham,Chelsea
+21,13,6,3,4,2026-01-07T20:00:00Z,Man City,Brighton
+21,15,11,2,4,2026-01-07T20:00:00Z,Newcastle,Leeds
+21,19,16,3,2,2026-01-07T20:00:00Z,West Ham,Nott'm Forest
+22,2,9,2,4,2026-01-17T15:00:00Z,Aston Villa,Everton
+22,6,4,3,3,2026-01-17T15:00:00Z,Brighton,Bournemouth
+22,7,5,3,4,2026-01-17T15:00:00Z,Chelsea,Brentford
+22,11,10,3,2,2026-01-17T15:00:00Z,Leeds,Fulham
+22,12,3,2,5,2026-01-17T15:00:00Z,Liverpool,Burnley
+22,14,13,4,3,2026-01-17T15:00:00Z,Man Utd,Man City
+22,16,1,4,3,2026-01-17T15:00:00Z,Nott'm Forest,Arsenal
+22,18,19,2,3,2026-01-17T15:00:00Z,Spurs,West Ham
+22,17,8,3,2,2026-01-17T15:00:00Z,Sunderland,Crystal Palace
+22,20,15,3,3,2026-01-17T15:00:00Z,Wolves,Newcastle
+23,1,14,3,4,2026-01-24T15:00:00Z,Arsenal,Man Utd
+23,4,12,4,3,2026-01-24T15:00:00Z,Bournemouth,Liverpool
+23,5,16,3,3,2026-01-24T15:00:00Z,Brentford,Nott'm Forest
+23,3,18,3,2,2026-01-24T15:00:00Z,Burnley,Spurs
+23,8,7,3,3,2026-01-24T15:00:00Z,Crystal Palace,Chelsea
+23,9,11,2,3,2026-01-24T15:00:00Z,Everton,Leeds
+23,10,6,3,3,2026-01-24T15:00:00Z,Fulham,Brighton
+23,13,20,2,4,2026-01-24T15:00:00Z,Man City,Wolves
+23,15,2,3,4,2026-01-24T15:00:00Z,Newcastle,Aston Villa
+23,19,17,2,2,2026-01-24T15:00:00Z,West Ham,Sunderland
+24,2,5,3,4,2026-01-31T15:00:00Z,Aston Villa,Brentford
+24,6,9,2,3,2026-01-31T15:00:00Z,Brighton,Everton
+24,7,19,2,4,2026-01-31T15:00:00Z,Chelsea,West Ham
+24,11,1,4,2,2026-01-31T15:00:00Z,Leeds,Arsenal
+24,12,15,3,5,2026-01-31T15:00:00Z,Liverpool,Newcastle
+24,14,10,3,3,2026-01-31T15:00:00Z,Man Utd,Fulham
+24,16,8,3,3,2026-01-31T15:00:00Z,Nott'm Forest,Crystal Palace
+24,18,13,4,3,2026-01-31T15:00:00Z,Spurs,Man City
+24,17,3,2,2,2026-01-31T15:00:00Z,Sunderland,Burnley
+24,20,4,3,3,2026-01-31T15:00:00Z,Wolves,Bournemouth
+25,1,17,2,4,2026-02-07T15:00:00Z,Arsenal,Sunderland
+25,4,2,3,3,2026-02-07T15:00:00Z,Bournemouth,Aston Villa
+25,6,8,3,3,2026-02-07T15:00:00Z,Brighton,Crystal Palace
+25,3,19,2,2,2026-02-07T15:00:00Z,Burnley,West Ham
+25,10,9,2,3,2026-02-07T15:00:00Z,Fulham,Everton
+25,11,16,3,2,2026-02-07T15:00:00Z,Leeds,Nott'm Forest
+25,12,13,4,5,2026-02-07T15:00:00Z,Liverpool,Man City
+25,14,18,3,3,2026-02-07T15:00:00Z,Man Utd,Spurs
+25,15,5,3,4,2026-02-07T15:00:00Z,Newcastle,Brentford
+25,20,7,3,3,2026-02-07T15:00:00Z,Wolves,Chelsea
+26,2,6,3,4,2026-02-11T20:00:00Z,Aston Villa,Brighton
+26,5,1,4,3,2026-02-11T20:00:00Z,Brentford,Arsenal
+26,7,11,2,4,2026-02-11T20:00:00Z,Chelsea,Leeds
+26,8,3,2,3,2026-02-11T20:00:00Z,Crystal Palace,Burnley
+26,9,4,3,3,2026-02-11T20:00:00Z,Everton,Bournemouth
+26,13,10,3,4,2026-02-11T20:00:00Z,Man City,Fulham
+26,16,20,2,3,2026-02-11T20:00:00Z,Nott'm Forest,Wolves
+26,18,15,3,3,2026-02-11T20:00:00Z,Spurs,Newcastle
+26,17,12,4,2,2026-02-11T20:00:00Z,Sunderland,Liverpool
+26,19,14,3,2,2026-02-11T20:00:00Z,West Ham,Man Utd
+27,2,11,2,4,2026-02-21T15:00:00Z,Aston Villa,Leeds
+27,5,6,3,3,2026-02-21T15:00:00Z,Brentford,Brighton
+27,7,3,2,4,2026-02-21T15:00:00Z,Chelsea,Burnley
+27,8,20,2,3,2026-02-21T15:00:00Z,Crystal Palace,Wolves
+27,9,14,3,3,2026-02-21T15:00:00Z,Everton,Man Utd
+27,13,15,3,4,2026-02-21T15:00:00Z,Man City,Newcastle
+27,16,12,4,3,2026-02-21T15:00:00Z,Nott'm Forest,Liverpool
+27,18,1,4,3,2026-02-21T15:00:00Z,Spurs,Arsenal
+27,17,10,3,2,2026-02-21T15:00:00Z,Sunderland,Fulham
+27,19,4,3,2,2026-02-21T15:00:00Z,West Ham,Bournemouth
+28,1,7,3,4,2026-02-28T15:00:00Z,Arsenal,Chelsea
+28,4,17,2,3,2026-02-28T15:00:00Z,Bournemouth,Sunderland
+28,6,16,3,3,2026-02-28T15:00:00Z,Brighton,Nott'm Forest
+28,3,5,3,2,2026-02-28T15:00:00Z,Burnley,Brentford
+28,10,18,3,3,2026-02-28T15:00:00Z,Fulham,Spurs
+28,11,13,4,2,2026-02-28T15:00:00Z,Leeds,Man City
+28,12,19,2,5,2026-02-28T15:00:00Z,Liverpool,West Ham
+28,14,8,3,3,2026-02-28T15:00:00Z,Man Utd,Crystal Palace
+28,15,9,2,4,2026-02-28T15:00:00Z,Newcastle,Everton
+28,20,2,3,3,2026-02-28T15:00:00Z,Wolves,Aston Villa
+29,2,7,3,4,2026-03-04T20:00:00Z,Aston Villa,Chelsea
+29,4,5,3,3,2026-03-04T20:00:00Z,Bournemouth,Brentford
+29,6,1,4,3,2026-03-04T20:00:00Z,Brighton,Arsenal
+29,9,3,2,3,2026-03-04T20:00:00Z,Everton,Burnley
+29,10,19,2,3,2026-03-04T20:00:00Z,Fulham,West Ham
+29,11,17,2,2,2026-03-04T20:00:00Z,Leeds,Sunderland
+29,13,16,3,4,2026-03-04T20:00:00Z,Man City,Nott'm Forest
+29,15,14,3,4,2026-03-04T20:00:00Z,Newcastle,Man Utd
+29,18,8,3,3,2026-03-04T20:00:00Z,Spurs,Crystal Palace
+29,20,12,4,3,2026-03-04T20:00:00Z,Wolves,Liverpool
+30,1,9,2,4,2026-03-14T15:00:00Z,Arsenal,Everton
+30,5,20,2,3,2026-03-14T15:00:00Z,Brentford,Wolves
+30,3,4,3,2,2026-03-14T15:00:00Z,Burnley,Bournemouth
+30,7,15,3,4,2026-03-14T15:00:00Z,Chelsea,Newcastle
+30,8,11,2,3,2026-03-14T15:00:00Z,Crystal Palace,Leeds
+30,12,18,3,5,2026-03-14T15:00:00Z,Liverpool,Spurs
+30,14,2,3,3,2026-03-14T15:00:00Z,Man Utd,Aston Villa
+30,16,10,3,3,2026-03-14T15:00:00Z,Nott'm Forest,Fulham
+30,17,6,3,2,2026-03-14T15:00:00Z,Sunderland,Brighton
+30,19,13,4,2,2026-03-14T15:00:00Z,West Ham,Man City
+31,2,19,2,4,2026-03-21T15:00:00Z,Aston Villa,West Ham
+31,4,14,3,3,2026-03-21T15:00:00Z,Bournemouth,Man Utd
+31,6,12,4,3,2026-03-21T15:00:00Z,Brighton,Liverpool
+31,9,7,3,3,2026-03-21T15:00:00Z,Everton,Chelsea
+31,10,3,2,3,2026-03-21T15:00:00Z,Fulham,Burnley
+31,11,5,3,2,2026-03-21T15:00:00Z,Leeds,Brentford
+31,13,8,3,4,2026-03-21T15:00:00Z,Man City,Crystal Palace
+31,15,17,2,4,2026-03-21T15:00:00Z,Newcastle,Sunderland
+31,18,16,3,3,2026-03-21T15:00:00Z,Spurs,Nott'm Forest
+31,20,1,4,3,2026-03-21T15:00:00Z,Wolves,Arsenal
+32,1,4,3,4,2026-04-11T14:00:00Z,Arsenal,Bournemouth
+32,5,9,2,3,2026-04-11T14:00:00Z,Brentford,Everton
+32,3,6,3,2,2026-04-11T14:00:00Z,Burnley,Brighton
+32,7,13,4,4,2026-04-11T14:00:00Z,Chelsea,Man City
+32,8,15,3,3,2026-04-11T14:00:00Z,Crystal Palace,Newcastle
+32,12,10,3,5,2026-04-11T14:00:00Z,Liverpool,Fulham
+32,14,11,2,3,2026-04-11T14:00:00Z,Man Utd,Leeds
+32,16,2,3,3,2026-04-11T14:00:00Z,Nott'm Forest,Aston Villa
+32,17,18,3,2,2026-04-11T14:00:00Z,Sunderland,Spurs
+32,19,20,2,2,2026-04-11T14:00:00Z,West Ham,Wolves
+33,2,17,2,4,2026-04-18T14:00:00Z,Aston Villa,Sunderland
+33,5,10,3,3,2026-04-18T14:00:00Z,Brentford,Fulham
+33,7,14,3,4,2026-04-18T14:00:00Z,Chelsea,Man Utd
+33,8,19,2,3,2026-04-18T14:00:00Z,Crystal Palace,West Ham
+33,9,12,4,3,2026-04-18T14:00:00Z,Everton,Liverpool
+33,11,20,2,2,2026-04-18T14:00:00Z,Leeds,Wolves
+33,13,1,4,4,2026-04-18T14:00:00Z,Man City,Arsenal
+33,15,4,3,4,2026-04-18T14:00:00Z,Newcastle,Bournemouth
+33,16,3,2,3,2026-04-18T14:00:00Z,Nott'm Forest,Burnley
+33,18,6,3,3,2026-04-18T14:00:00Z,Spurs,Brighton
+34,1,15,3,4,2026-04-25T14:00:00Z,Arsenal,Newcastle
+34,4,11,2,3,2026-04-25T14:00:00Z,Bournemouth,Leeds
+34,6,7,3,3,2026-04-25T14:00:00Z,Brighton,Chelsea
+34,3,13,4,2,2026-04-25T14:00:00Z,Burnley,Man City
+34,10,2,3,3,2026-04-25T14:00:00Z,Fulham,Aston Villa
+34,12,8,3,5,2026-04-25T14:00:00Z,Liverpool,Crystal Palace
+34,14,5,3,3,2026-04-25T14:00:00Z,Man Utd,Brentford
+34,17,16,3,2,2026-04-25T14:00:00Z,Sunderland,Nott'm Forest
+34,19,9,2,2,2026-04-25T14:00:00Z,West Ham,Everton
+34,20,18,3,3,2026-04-25T14:00:00Z,Wolves,Spurs
+35,1,10,3,4,2026-05-02T14:00:00Z,Arsenal,Fulham
+35,2,18,3,4,2026-05-02T14:00:00Z,Aston Villa,Spurs
+35,4,8,3,3,2026-05-02T14:00:00Z,Bournemouth,Crystal Palace
+35,5,19,2,3,2026-05-02T14:00:00Z,Brentford,West Ham
+35,7,16,3,4,2026-05-02T14:00:00Z,Chelsea,Nott'm Forest
+35,9,13,4,3,2026-05-02T14:00:00Z,Everton,Man City
+35,11,3,2,2,2026-05-02T14:00:00Z,Leeds,Burnley
+35,14,12,4,3,2026-05-02T14:00:00Z,Man Utd,Liverpool
+35,15,6,3,4,2026-05-02T14:00:00Z,Newcastle,Brighton
+35,20,17,2,3,2026-05-02T14:00:00Z,Wolves,Sunderland
+36,6,20,2,3,2026-05-09T14:00:00Z,Brighton,Wolves
+36,3,2,3,2,2026-05-09T14:00:00Z,Burnley,Aston Villa
+36,8,9,2,3,2026-05-09T14:00:00Z,Crystal Palace,Everton
+36,10,4,3,3,2026-05-09T14:00:00Z,Fulham,Bournemouth
+36,12,7,3,5,2026-05-09T14:00:00Z,Liverpool,Chelsea
+36,13,5,3,4,2026-05-09T14:00:00Z,Man City,Brentford
+36,16,15,3,3,2026-05-09T14:00:00Z,Nott'm Forest,Newcastle
+36,18,11,2,3,2026-05-09T14:00:00Z,Spurs,Leeds
+36,17,14,3,2,2026-05-09T14:00:00Z,Sunderland,Man Utd
+36,19,1,4,2,2026-05-09T14:00:00Z,West Ham,Arsenal
+37,1,3,2,4,2026-05-17T14:00:00Z,Arsenal,Burnley
+37,2,12,4,4,2026-05-17T14:00:00Z,Aston Villa,Liverpool
+37,4,13,4,3,2026-05-17T14:00:00Z,Bournemouth,Man City
+37,5,8,3,3,2026-05-17T14:00:00Z,Brentford,Crystal Palace
+37,7,18,3,4,2026-05-17T14:00:00Z,Chelsea,Spurs
+37,9,17,2,3,2026-05-17T14:00:00Z,Everton,Sunderland
+37,11,6,3,2,2026-05-17T14:00:00Z,Leeds,Brighton
+37,14,16,3,3,2026-05-17T14:00:00Z,Man Utd,Nott'm Forest
+37,15,19,2,4,2026-05-17T14:00:00Z,Newcastle,West Ham
+37,20,10,3,3,2026-05-17T14:00:00Z,Wolves,Fulham
+38,6,14,3,3,2026-05-24T15:00:00Z,Brighton,Man Utd
+38,3,20,2,2,2026-05-24T15:00:00Z,Burnley,Wolves
+38,8,1,4,3,2026-05-24T15:00:00Z,Crystal Palace,Arsenal
+38,10,15,3,3,2026-05-24T15:00:00Z,Fulham,Newcastle
+38,12,5,3,5,2026-05-24T15:00:00Z,Liverpool,Brentford
+38,13,2,3,4,2026-05-24T15:00:00Z,Man City,Aston Villa
+38,16,4,3,3,2026-05-24T15:00:00Z,Nott'm Forest,Bournemouth
+38,18,9,2,3,2026-05-24T15:00:00Z,Spurs,Everton
+38,17,7,3,2,2026-05-24T15:00:00Z,Sunderland,Chelsea
+38,19,11,2,2,2026-05-24T15:00:00Z,West Ham,Leeds
