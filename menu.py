@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 from io import BytesIO
 from datetime import datetime, timezone
-from supabase import supabase
+from supabase_client import supabase
 
 from data_utils import (
     get_next_gameweek,
