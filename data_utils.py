@@ -1,28 +1,7 @@
 import io
 import pandas as pd
 from datetime import datetime, timezone
-
-
-# ============================================================
-#                   LOADING (LOCAL)
-# ============================================================
-def load_data(
-    gw_data_path="Data/gw_data.parquet",
-    standings_path="Data/league_standings.csv",
-    gameweeks_path="Data/gameweeks.csv",
-    fixtures_path="Data/fixtures.csv"
-):
-    """
-    Load all FPL data from local files.
-    """
-    df = pd.read_parquet(gw_data_path)
-    standings = pd.read_csv(standings_path)
-    gameweeks = pd.read_csv(gameweeks_path)
-    fixtures = pd.read_csv(fixtures_path)
-
-    _convert_datetime_columns(gameweeks, fixtures)
-    return df, standings, gameweeks, fixtures
-
+import os
 
 # ============================================================
 #                   LOADING (SUPABASE)
@@ -32,16 +11,38 @@ def load_data_supabase(
     bucket="data",
     gw_data_file="gw_data.parquet",
     standings_file="league_standings.csv",
-    gameweeks_file="gameweeks.csv"
+    local_gameweeks="Data/gameweeks.csv",
+    local_fixtures="Data/fixtures.csv"
 ):
-    """
-    Load all FPL data from Supabase Storage.
-    """
-    df = _download_parquet(supabase, bucket, gw_data_file)
-    standings = _download_csv(supabase, bucket, standings_file)
-    gameweeks = _download_csv(supabase, bucket, gameweeks_file)
+    """Load parquet + standings from Supabase, and gameweeks + fixtures locally."""
 
-    return df, standings, gameweeks, 
+    # -----------------------------
+    # Load GW data from Supabase
+    # -----------------------------
+    df = _download_parquet(supabase, bucket, gw_data_file)
+
+    # -----------------------------
+    # Load League standings from Supabase
+    # -----------------------------
+    standings = _download_csv(supabase, bucket, standings_file)
+
+    # -----------------------------
+    # Load fixtures and gameweeks locally
+    # -----------------------------
+    if os.path.exists(local_gameweeks):
+        gameweeks = pd.read_csv(local_gameweeks)
+    else:
+        raise FileNotFoundError(f"Local file not found: {local_gameweeks}")
+
+    if os.path.exists(local_fixtures):
+        fixtures = pd.read_csv(local_fixtures)
+    else:
+        raise FileNotFoundError(f"Local file not found: {local_fixtures}")
+
+    # Convert date/datetime columns in local files
+    _convert_datetime_columns(gameweeks, fixtures)
+
+    return df, standings, gameweeks, fixtures
 
 
 # ---------- Helpers for Supabase downloads ----------

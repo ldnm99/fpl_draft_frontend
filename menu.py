@@ -10,7 +10,8 @@ from data_utils import (
     get_next_gameweek,
     get_upcoming_fixtures,
     get_starting_lineup,
-    get_team_total_points
+    get_team_total_points,
+    load_data_supabase
 )
 
 # ---------------------------------------------------------------------
@@ -24,43 +25,9 @@ TOKEN = st.secrets["TOKEN_STREAMLIT"]
 
 BUCKET = "data"  # your Supabase Storage bucket
 
+files_root = supabase.storage.from_(BUCKET).list("")
+st.write("📁 Files in root of bucket:", files_root)
 
-# ---------------------------------------------------------------------
-# SUPABASE HELPERS
-# ---------------------------------------------------------------------
-@st.cache_data(show_spinner=False)
-def load_csv(filename: str) -> pd.DataFrame:
-    """Download a CSV from Supabase Storage and return a DataFrame."""
-    try:
-        res = supabase.storage.from_(BUCKET).download(filename)
-        return pd.read_csv(BytesIO(res))
-    except Exception as e:
-        st.error(f"❌ Error loading {filename}: {e}")
-        return pd.DataFrame()
-
-
-def load_data():
-    """Load all CSVs from Supabase Storage."""
-    df = load_csv("players.csv")
-    standings = load_csv("standings.csv")
-    gameweeks = load_csv("gameweeks.csv")
-    fixtures = load_csv("fixtures.csv")
-    return df, standings, gameweeks, fixtures
-
-
-def write_last_update() -> str:
-    """Upload last_updated.txt to Supabase after triggering ETL."""
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    buffer = BytesIO(timestamp.encode("utf-8"))
-
-    supabase.storage.from_(BUCKET).upload(
-        "last_updated.txt",
-        buffer,
-        file_options={"content-type": "text/plain"},
-        upsert=True
-    )
-
-    return timestamp
 
 
 # ---------------------------------------------------------------------
@@ -91,7 +58,7 @@ st.markdown("### Select a page to view detailed stats")
 # ---------------------------------------------------------------------
 # LOAD DATA
 # ---------------------------------------------------------------------
-df, standings, gameweeks, fixtures = load_data()
+df, standings, gameweeks, fixtures = load_data_supabase()
 
 
 # ---------------------------------------------------------------------
@@ -188,8 +155,7 @@ if st.button("Run ETL Pipeline"):
         status, msg = trigger_pipeline()
 
     if status == 204:
-        timestamp = write_last_update()
         st.cache_data.clear()
-        st.success(f"✅ Pipeline triggered! Last update: {timestamp}")
+        st.success("✅ Pipeline triggered! Data will be updated shortly.")
     else:
         st.error(f"❌ Error triggering pipeline: {status}\n{msg}")
