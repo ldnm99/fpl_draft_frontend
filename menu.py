@@ -80,21 +80,23 @@ if standings.empty:
 
 manager_list = sorted(standings["team_name"].unique().tolist())
 
-if st.button("🌟 Overall", use_container_width=True, type="primary"):
+# Página Overall
+if st.button("🌟 Overall", width="stretch", type="primary"):
     st.session_state["current_page"] = "Overall"
-    st.switch_page("pages/Overall.py")
+    st.switch_page("Overall")  # apenas o nome da página, sem .py e sem 'pages/'
 
 st.markdown("---")
 
+# Páginas de cada manager
 cols_per_row = 4
 for i in range(0, len(manager_list), cols_per_row):
     cols = st.columns(cols_per_row)
     for col, name in zip(cols, manager_list[i:i + cols_per_row]):
         with col:
-            if st.button(name, use_container_width=True):
+            if st.button(name, width="stretch"):
                 st.session_state["current_page"] = name
-                st.switch_page(f"pages/{name}.py")
-
+                st.switch_page(name)  # apenas o nome da página
+               
 st.divider()
 
 
