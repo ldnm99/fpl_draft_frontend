@@ -72,31 +72,38 @@ upcoming = get_upcoming_fixtures(fixtures, next_gw)
 # ---------------------------------------------------------------------
 # PAGE NAVIGATION
 # ---------------------------------------------------------------------
+# --- MANAGER BUTTONS ---
 st.markdown("### 📋 Select a Page")
 
-if standings.empty:
-    st.error("❌ Unable to load standings from Supabase.")
-    st.stop()
-
 manager_list = sorted(standings["team_name"].unique().tolist())
+buttons = ["Overall"] + manager_list
 
-# Página Overall
+# Map de botão → página
+page_map = {"Overall": "Overall"}
+for name in manager_list:
+    # Convert nomes de managers para nomes válidos de arquivos (sem espaço/acento)
+    page_name = name.replace(" ", "")  # Ex: "Blue Lock XI" -> "BlueLockXI"
+    page_map[name] = page_name
+
+# Overall button
 if st.button("🌟 Overall", width="stretch", type="primary"):
     st.session_state["current_page"] = "Overall"
-    st.switch_page("Overall")  # apenas o nome da página, sem .py e sem 'pages/'
+    st.switch_page(page_map["Overall"])
 
 st.markdown("---")
 
-# Páginas de cada manager
+# Manager buttons (4 por linha)
 cols_per_row = 4
-for i in range(0, len(manager_list), cols_per_row):
+manager_buttons = [b for b in buttons if b != "Overall"]
+
+for i in range(0, len(manager_buttons), cols_per_row):
     cols = st.columns(cols_per_row)
-    for col, name in zip(cols, manager_list[i:i + cols_per_row]):
-        with col:
+    for j, name in enumerate(manager_buttons[i:i + cols_per_row]):
+        with cols[j]:
             if st.button(name, width="stretch"):
                 st.session_state["current_page"] = name
-                st.switch_page(name)  # apenas o nome da página
-               
+                st.switch_page(page_map[name])
+
 st.divider()
 
 
