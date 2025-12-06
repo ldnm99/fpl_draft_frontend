@@ -37,10 +37,10 @@ def trigger_pipeline():
     url = f"https://api.github.com/repos/{OWNER}/{REPO}/dispatches"
     headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": f"token {TOKEN}",
+        "Authorization": f"Bearer {TOKEN}",  # use Bearer
     }
     payload = {
-        "event_type": "run_pipeline",
+        "event_type": "run_pipeline",  # must match repository_dispatch type
         "client_payload": {"triggered_by": "streamlit"}
     }
 
