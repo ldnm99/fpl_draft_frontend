@@ -72,27 +72,19 @@ upcoming = get_upcoming_fixtures(fixtures, next_gw)
 # ---------------------------------------------------------------------
 # PAGE NAVIGATION
 # ---------------------------------------------------------------------
-# --- MANAGER BUTTONS ---
 st.markdown("### 📋 Select a Page")
 
 manager_list = sorted(standings["team_name"].unique().tolist())
 buttons = ["Overall"] + manager_list
 
-# Map de botão → página
-page_map = {"Overall": "Overall"}
-for name in manager_list:
-    # Convert nomes de managers para nomes válidos de arquivos (sem espaço/acento)
-    page_name = name.replace(" ", "")  # Ex: "Blue Lock XI" -> "BlueLockXI"
-    page_map[name] = page_name
-
 # Overall button
-if st.button("🌟 Overall", width="stretch", type="primary"):
+if st.button("🌟 Overall", use_container_width=True, type="primary"):
     st.session_state["current_page"] = "Overall"
-    st.switch_page(page_map["Overall"])
+    st.switch_page("pages/Overall.py")
 
 st.markdown("---")
 
-# Manager buttons (4 por linha)
+# Manager buttons (4 per row)
 cols_per_row = 4
 manager_buttons = [b for b in buttons if b != "Overall"]
 
@@ -100,9 +92,9 @@ for i in range(0, len(manager_buttons), cols_per_row):
     cols = st.columns(cols_per_row)
     for j, name in enumerate(manager_buttons[i:i + cols_per_row]):
         with cols[j]:
-            if st.button(name, width="stretch"):
+            if st.button(name, use_container_width=True):
                 st.session_state["current_page"] = name
-                st.switch_page(page_map[name])
+                st.switch_page(f"pages/{name}.py")
 
 st.divider()
 
