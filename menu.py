@@ -4,7 +4,8 @@ import pandas as pd
 import requests
 from io import BytesIO
 from datetime import datetime, timezone
-from supabase_client import supabase
+from supabase import create_client
+from supabase_client import SUPABASE_URL, SUPABASE_KEY
 
 from data_utils import (
     get_next_gameweek,
@@ -14,21 +15,20 @@ from data_utils import (
     load_data_supabase
 )
 
-# ---------------------------------------------------------------------
-# CONFIG
-# ---------------------------------------------------------------------
-st.set_page_config(page_title="FPL Draft Menu", layout="wide")
-
+# --------------------------------------------------------------------
+# INIT SUPABASE CLIENT
+# --------------------------------------------------------------------
 OWNER = "ldnm99"
 REPO = "FPL-ETL"
 TOKEN = st.secrets["TOKEN_STREAMLIT"]
 
 BUCKET = "data"  # your Supabase Storage bucket
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-files_root = supabase.storage.from_(BUCKET).list("")
-st.write("📁 Files in root of bucket:", files_root)
-
-
+# ---------------------------------------------------------------------
+# CONFIG
+# ---------------------------------------------------------------------
+st.set_page_config(page_title="FPL Draft Menu", layout="wide")
 
 # ---------------------------------------------------------------------
 # GITHUB ETL TRIGGER
@@ -58,7 +58,7 @@ st.markdown("### Select a page to view detailed stats")
 # ---------------------------------------------------------------------
 # LOAD DATA
 # ---------------------------------------------------------------------
-df, standings, gameweeks, fixtures = load_data_supabase()
+df, standings, gameweeks, fixtures = load_data_supabase(supabase)
 
 
 # ---------------------------------------------------------------------
