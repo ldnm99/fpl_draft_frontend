@@ -1,24 +1,22 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
+from supabase import create_client
+from supabase_client import SUPABASE_URL, SUPABASE_KEY
 from visuals_utils import calc_defensive_points
+from data_utils import load_data_supabase
 
-# ---------------- CONFIG ----------------
+
+# ======================= CONFIGURATION =======================
 st.set_page_config(layout="wide")
-GW_DATA_PATH   = "Data/gw_data.parquet"
-STANDINGS_PATH = "Data/league_standings.csv"
-FIXTURES_PATH = "Data/fixtures.csv"
-fixtures = pd.read_csv(FIXTURES_PATH)
 
-# ---------------- LOAD DATA ----------------
-@st.cache_data
-def load_data():
-    df = pd.read_parquet(GW_DATA_PATH)
-    standings = pd.read_csv(STANDINGS_PATH)
-    return df, standings
-
-df, standings = load_data()
+# ======================= LOAD DATA & INIT SUPABASE =======================
+OWNER = "ldnm99"
+REPO = "FPL-ETL"
+TOKEN = st.secrets["TOKEN_STREAMLIT"]
+BUCKET = "data"  # your Supabase Storage bucket
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
 
 #---------------- OPERATIONS ----------------
 latest_gw = df["gw"].max()

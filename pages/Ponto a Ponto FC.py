@@ -1,9 +1,12 @@
+
+# ======================= IMPORTS =======================
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
+from supabase import create_client
+from supabase_client import SUPABASE_URL, SUPABASE_KEY
 from data_utils import (
-    load_data,
+    load_data_supabase,
     get_manager_data,
     get_starting_lineup,
     calculate_team_gw_points,
@@ -21,24 +24,19 @@ from visuals_utils import (
     display_other_stats
 )
 
-# ---------------- CONFIG ----------------
+
+# ======================= CONFIGURATION =======================
 st.set_page_config(layout="wide")
-GW_DATA_PATH   = "Data/gw_data.parquet"
-STANDINGS_PATH = "Data/league_standings.csv"
-GAMEWEEKS_PATH = "Data/gameweeks.csv"
-FIXTURES_PATH  = "Data/fixtures.csv"
 
-# ---------------- LOAD DATA ----------------
-@st.cache_data
-def load_all_data():
-    return load_data(
-        gw_data_path=GW_DATA_PATH,
-        standings_path=STANDINGS_PATH,
-        gameweeks_path=GAMEWEEKS_PATH,
-        fixtures_path=FIXTURES_PATH
-    )
 
-df, standings, gameweeks, fixtures = load_all_data()  # <-- unpack all 4
+# ======================= LOAD DATA & INIT SUPABASE =======================
+OWNER = "ldnm99"
+REPO = "FPL-ETL"
+TOKEN = st.secrets["TOKEN_STREAMLIT"]
+BUCKET = "data"  # your Supabase Storage bucket
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
+
 
 # ---------------- MANAGER SELECTION ----------------
 manager_name = "Ponto a Ponto FC"  

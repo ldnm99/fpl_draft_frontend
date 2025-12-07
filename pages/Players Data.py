@@ -1,21 +1,42 @@
+
+# ======================= IMPORTS =======================
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from supabase import create_client
+from supabase_client import SUPABASE_URL, SUPABASE_KEY
+from data_utils import (
+    load_data_supabase,
+    get_manager_data,
+    get_starting_lineup,
+    calculate_team_gw_points,
+    get_teams_avg_points,
+    points_per_player_position,
+    get_top_performers,
+    get_player_progression
+)
+from visuals_utils import (
+    display_overview,
+    display_performance_trend,
+    display_latest_gw,
+    display_top_performers,
+    display_player_progression,
+    display_other_stats
+)
 
-# ---------------- CONFIG ----------------
+
+# ======================= CONFIGURATION =======================
 st.set_page_config(layout="wide")
-GW_DATA_PATH   = "Data/gw_data.parquet"
-STANDINGS_PATH = "Data/league_standings.csv"
 
-# ---------------- LOAD DATA ----------------
-@st.cache_data
-def load_data():
-    df = pd.read_parquet(GW_DATA_PATH)
-    standings = pd.read_csv(STANDINGS_PATH)
-    return df, standings
 
-df, standings = load_data()
-# ---------------- LOAD PLAYERS DATA ----------------
+# ======================= LOAD DATA & INIT SUPABASE =======================
+OWNER = "ldnm99"
+REPO = "FPL-ETL"
+TOKEN = st.secrets["TOKEN_STREAMLIT"]
+BUCKET = "data"  # your Supabase Storage bucket
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
+
 players = pd.read_csv("Data/players_data.csv")
 
 
