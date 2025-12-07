@@ -1,9 +1,10 @@
+
+# ======================= IMPORTS =======================
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 from supabase import create_client
 from supabase_client import SUPABASE_URL, SUPABASE_KEY
-
 from data_utils import (
     load_data_supabase,
     get_manager_data,
@@ -14,7 +15,6 @@ from data_utils import (
     get_top_performers,
     get_player_progression
 )
-from supabase_client import SUPABASE_KEY
 from visuals_utils import (
     display_overview,
     display_performance_trend,
@@ -24,26 +24,21 @@ from visuals_utils import (
     display_other_stats
 )
 
-# ---------------- CONFIG ----------------
-st.set_page_config(layout="wide")
-GW_DATA_PATH   = "Data/gw_data.parquet"
-STANDINGS_PATH = "Data/league_standings.csv"
-GAMEWEEKS_PATH = "Data/gameweeks.csv"
-FIXTURES_PATH  = "Data/fixtures.csv"
 
-# ---------------- LOAD DATA ----------------
-# --------------------------------------------------------------------
-# INIT SUPABASE CLIENT
-# --------------------------------------------------------------------
+# ======================= CONFIGURATION =======================
+st.set_page_config(layout="wide")
+
+
+# ======================= LOAD DATA & INIT SUPABASE =======================
 OWNER = "ldnm99"
 REPO = "FPL-ETL"
 TOKEN = st.secrets["TOKEN_STREAMLIT"]
-
 BUCKET = "data"  # your Supabase Storage bucket
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-df, standings, gameweeks, fixtures = load_data_supabase()  # <-- unpack all 4
+df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
 
-# ---------------- MANAGER SELECTION ----------------
+
+# ======================= MANAGER SELECTION =======================
 manager_name = "Blue Lock XI"
 manager_df = get_manager_data(df, manager_name)
 if manager_df.empty:
@@ -52,20 +47,22 @@ if manager_df.empty:
 
 st.title(f"📊 {manager_name} Dashboard")
 
-# ---------------- OVERVIEW ----------------
+# ======================= DASHBOARD SECTIONS =======================
+
+# ---- Overview ----
 display_overview(manager_name, manager_df)
 
-# ---------------- TEAM PERFORMANCE TREND ----------------
+# ---- Team Performance Trend ----
 manager_points = display_performance_trend(manager_name, df)
 
-# ---------------- CURRENT GAMEWEEK ----------------
+# ---- Current Gameweek ----
 display_latest_gw(manager_df)
 
-# ---------------- TOP PERFORMERS ----------------
+# ---- Top Performers ----
 top_performances = display_top_performers(manager_df)
 
-# ---------------- PLAYER PROGRESSION ----------------
+# ---- Player Progression ----
 display_player_progression(manager_df)
 
-# ---------------- OTHER STATS ----------------
+# ---- Other Stats ----
 display_other_stats(manager_points, top_performances)

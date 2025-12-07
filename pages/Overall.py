@@ -1,18 +1,21 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from data_utils import load_data, get_starting_lineup, calculate_team_gw_points, get_teams_avg_points
+from data_utils import load_data_supabase, get_starting_lineup, calculate_team_gw_points, get_teams_avg_points
+from supabase import create_client
+from supabase_client import SUPABASE_URL, SUPABASE_KEY
 
-# ---------------- CONFIG ----------------
-st.set_page_config(page_title="FPL Draft Overall Dashboard", layout="wide")
 
-# ---------------- LOAD DATA ----------------
-@st.cache_data
-def load_all_data():
-    df, standings, gameweeks, fixtures = load_data()
-    return df, standings, gameweeks, fixtures
+# ======================= CONFIGURATION =======================
+st.set_page_config(layout="wide")
 
-df, standings, gameweeks, fixtures = load_all_data()
+# ======================= LOAD DATA & INIT SUPABASE =======================
+OWNER = "ldnm99"
+REPO = "FPL-ETL"
+TOKEN = st.secrets["TOKEN_STREAMLIT"]
+BUCKET = "data"  # your Supabase Storage bucket
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
 
 # ---------------- DASHBOARD TITLE ----------------
 st.title("FPL Draft Overall Dashboard")
