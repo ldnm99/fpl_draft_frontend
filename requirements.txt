@@ -4,3 +4,4 @@ requests
 supabase
 pyarrow
 python-dotenv
+plotly
