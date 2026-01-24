@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import plotly.graph_objects as go
 from datetime import datetime, timezone
 from supabase import create_client
 from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
@@ -22,9 +23,14 @@ from core.error_handler import (
 
 logger = get_logger(__name__)
 
-# --------------------------------------------------------------------
-# INIT SUPABASE CLIENT
-# --------------------------------------------------------------------
+# ========================================================================
+# PAGE CONFIGURATION
+# ========================================================================
+st.set_page_config(page_title="FPL Draft Menu", layout="wide")
+
+# ========================================================================
+# SUPABASE CLIENT INITIALIZATION
+# ========================================================================
 OWNER = "ldnm99"
 REPO = "FPL-ETL"
 TOKEN = st.secrets.get("TOKEN_STREAMLIT")
@@ -35,14 +41,9 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 if not TOKEN:
     logger.warning("GitHub token not configured")
 
-# -----
-# CONFIG
-# -----
-st.set_page_config(page_title="FPL Draft Menu", layout="wide")
-
-# -----
+# ========================================================================
 # GITHUB ETL TRIGGER
-# -----
+# ========================================================================
 def trigger_pipeline():
     """Trigger ETL pipeline with error handling."""
     try:
@@ -79,15 +80,9 @@ def trigger_pipeline():
         logger.error(f"Pipeline trigger failed: {str(e)}")
         raise
 
-# -----
-# HEADER
-# -----
-st.title("⚽ Fantasy Premier League Draft Dashboard")
-st.markdown("### Select a page to view detailed stats")
-
-# -----
+# ========================================================================
 # LOAD DATA
-# -----
+# ========================================================================
 df = None
 standings = None
 gameweeks = None
@@ -116,9 +111,9 @@ if gameweeks is None or gameweeks.empty:
 if fixtures is None or fixtures.empty:
     display_warning("No fixtures data available")
 
-# -----
-# NEXT GAMEWEEK & FIXTURES
-# -----
+# ========================================================================
+# CALCULATE GAMEWEEK INFO & STANDINGS
+# ========================================================================
 try:
     now = datetime.now(timezone.utc)
     next_gw = get_next_gameweek(gameweeks, now)
@@ -127,121 +122,294 @@ except Exception as e:
     display_warning("Could not calculate gameweek information")
     next_gw = pd.DataFrame()
 
-# -----
-# PAGE NAVIGATION
-# -----
-st.markdown("### 📋 Select a Page")
+try:
+    starting = get_starting_lineup(df)
+    totals = get_team_total_points(starting) if not starting.empty else pd.DataFrame()
+except Exception as e:
+    logger.error(f"Error calculating standings: {str(e)}")
+    totals = pd.DataFrame()
 
-manager_list = sorted(standings["team_name"].unique().tolist()) if not standings.empty else []
-buttons = ["Overall"] + manager_list
+# ========================================================================
+# PAGE HEADER
+# ========================================================================
+st.markdown("# ⚽ Fantasy Premier League Draft Dashboard")
+st.markdown("Comprehensive league analytics and manager performance tracking")
 
-# Overall button
-if st.button("🌟 Overall", use_container_width=True, type="primary"):
-    st.session_state["current_page"] = "Overall"
-    st.switch_page("pages/Overall.py")
+# ========================================================================
+# KPI SUMMARY CARDS
+# ========================================================================
+if not standings.empty and not totals.empty:
+    try:
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            num_managers = len(standings)
+            st.metric("📊 Managers in League", num_managers)
+        
+        with col2:
+            if "gw_points" in totals.columns:
+                avg_gw = totals["gw_points"].mean()
+                st.metric("📈 Avg Points/GW", f"{avg_gw:.1f}")
+            else:
+                st.metric("📈 Avg Points/GW", "—")
+        
+        with col3:
+            if "total_points" in totals.columns:
+                top_points = totals["total_points"].max()
+                st.metric("🥇 Top Team Points", f"{int(top_points)}")
+            else:
+                st.metric("🥇 Top Team Points", "—")
+        
+        with col4:
+            if "total_points" in totals.columns:
+                bottom_points = totals["total_points"].min()
+                st.metric("🥈 Bottom Team Points", f"{int(bottom_points)}")
+            else:
+                st.metric("🥈 Bottom Team Points", "—")
+    except Exception as e:
+        logger.warning(f"Error displaying KPI cards: {str(e)}")
 
 st.markdown("---")
 
-# Manager buttons (4 per row)
-cols_per_row = 4
-manager_buttons = [b for b in buttons if b != "Overall"]
+# ========================================================================
+# NAVIGATION SECTION
+# ========================================================================
+st.markdown("## 🗺️ Navigate to Dashboard")
 
-if not manager_buttons:
-    display_warning("No managers found in standings data")
-else:
-    for i in range(0, len(manager_buttons), cols_per_row):
-        cols = st.columns(cols_per_row)
-        for j, name in enumerate(manager_buttons[i:i + cols_per_row]):
-            with cols[j]:
-                if st.button(name, use_container_width=True):
-                    st.session_state["current_page"] = name
-                    st.switch_page(f"pages/{name}.py")
+# Create tabs for different navigation sections
+nav_col1, nav_col2 = st.columns([1.5, 1])
 
-st.divider()
-
-# -----
-# DEADLINE INFO
-# -----
-try:
-    if not next_gw.empty:
-        gw_name = next_gw.iloc[0]["name"]
-        deadline = next_gw.iloc[0]["deadline_time"]
-        remain = deadline - now
-
-        st.markdown(
-            f"### ⏰ Next Deadline: **{gw_name}** — "
-            f"{deadline.strftime('%A, %d %B %Y %H:%M %Z')}"
-        )
-        st.write(
-            f"Time remaining: **{remain.days} days, "
-            f"{remain.seconds // 3600} hours, "
-            f"{(remain.seconds % 3600) // 60} minutes**"
-        )
+with nav_col1:
+    st.markdown("### 📋 League Overview & Managers")
+    
+    # Overall button
+    if st.button("🌟 Overall League Dashboard", use_container_width=True, type="primary"):
+        st.session_state["current_page"] = "Overall"
+        st.switch_page("pages/Overall.py")
+    
+    st.markdown("**Select a manager to view individual performance:**")
+    
+    manager_list = sorted(standings["team_name"].unique().tolist()) if not standings.empty else []
+    manager_buttons = [b for b in manager_list]
+    
+    if not manager_buttons:
+        display_warning("No managers found in standings data")
     else:
-        display_info("🏁 No upcoming deadlines found.")
-except Exception as e:
-    logger.warning(f"Failed to display deadline: {str(e)}")
-    display_warning("Could not display deadline information")
+        cols_per_row = 2
+        for i in range(0, len(manager_buttons), cols_per_row):
+            cols = st.columns(cols_per_row)
+            for j, name in enumerate(manager_buttons[i:i + cols_per_row]):
+                with cols[j]:
+                    if st.button(name, use_container_width=True):
+                        st.session_state["current_page"] = name
+                        st.switch_page(f"pages/{name}.py")
 
-# -----
-# MAIN CONTENT
-# -----
-try:
-    left, right = st.columns([1.5, 1])
-
-    with left:
-        st.subheader("🏆 League Table / Total Team Points")
-        try:
-            starting = get_starting_lineup(df)
-            if not starting.empty:
-                totals = get_team_total_points(starting)
-                st.dataframe(totals, hide_index=True, use_container_width=True)
-            else:
-                display_warning("No player data for standings")
-        except Exception as e:
-            logger.error(f"Error displaying standings: {str(e)}")
-            display_error(e, "Error displaying standings")
-
-    with right:
-        st.subheader("⚔️ Upcoming Fixtures")
-        try:
-            upcoming = get_upcoming_fixtures(fixtures, next_gw) if not next_gw.empty else pd.DataFrame()
-            if not upcoming.empty:
-                st.dataframe(
-                    upcoming[["Home", "Away", "Kickoff"]],
-                    hide_index=True,
-                    use_container_width=True
-                )
-            else:
-                st.write("No fixtures available.")
-        except Exception as e:
-            logger.warning(f"Failed to get upcoming fixtures: {str(e)}")
-            st.write("Could not load fixtures")
-
-except Exception as e:
-    logger.error(f"Error displaying main content: {str(e)}")
-    display_error(e, "Error displaying dashboard content")
+with nav_col2:
+    st.markdown("### ⏰ Quick Info")
+    
+    try:
+        if not next_gw.empty:
+            gw_name = next_gw.iloc[0]["name"]
+            deadline = next_gw.iloc[0]["deadline_time"]
+            remain = deadline - now
+            
+            st.info(f"📅 **{gw_name}**")
+            st.write(f"📍 {deadline.strftime('%a, %d %b %H:%M')}")
+            
+            days = remain.days
+            hours = remain.seconds // 3600
+            minutes = (remain.seconds % 3600) // 60
+            
+            st.write(f"⏳ **{days}d {hours}h {minutes}m**")
+        else:
+            st.info("🏁 No upcoming deadlines")
+    except Exception as e:
+        logger.warning(f"Failed to display deadline: {str(e)}")
+        st.info("📅 Deadline info unavailable")
 
 st.divider()
 
-# -----
-# ETL PIPELINE CONTROL
-# -----
-st.markdown("### 📊 Data Extraction Pipeline")
+# ========================================================================
+# MAIN DASHBOARD CONTENT
+# ========================================================================
+st.markdown("## 📊 League Standing & Upcoming Fixtures")
 
-if st.button("Run ETL Pipeline"):
+dashboard_col1, dashboard_col2 = st.columns([1.5, 1], gap="large")
+
+# Left column: League standings
+with dashboard_col1:
+    st.markdown("### 🏆 League Table - Total Points")
     try:
-        with st.spinner("⏳ Triggering ETL pipeline…"):
-            status, msg = trigger_pipeline()
-
-        if status == 204:
-            st.cache_data.clear()
-            st.success("✅ Pipeline triggered! Data will be updated shortly.")
-            logger.info("Pipeline triggered successfully")
-        else:
-            display_error(
-                Exception(f"Status {status}: {msg}"),
-                "Error triggering pipeline"
+        if not totals.empty:
+            display_data = totals.copy()
+            
+            st.dataframe(
+                display_data,
+                hide_index=True,
+                use_container_width=True,
+                height=400
             )
+        else:
+            display_warning("No standings data available")
     except Exception as e:
-        display_error(e, "Failed to trigger ETL pipeline")
+        logger.error(f"Error displaying standings: {str(e)}")
+        display_error(e, "Error displaying standings")
+
+# Right column: Upcoming fixtures
+with dashboard_col2:
+    st.markdown("### 🎯 Upcoming Fixtures")
+    try:
+        upcoming = get_upcoming_fixtures(fixtures, next_gw) if not next_gw.empty else pd.DataFrame()
+        if not upcoming.empty:
+            fixture_display = upcoming[["Home", "Away", "Kickoff"]].head(10)
+            st.dataframe(
+                fixture_display,
+                hide_index=True,
+                use_container_width=True,
+                height=400
+            )
+        else:
+            st.info("No fixtures available.")
+    except Exception as e:
+        logger.warning(f"Failed to get upcoming fixtures: {str(e)}")
+        display_warning("Could not load fixtures")
+
+st.divider()
+
+# ========================================================================
+# DATA VISUALIZATION: STANDINGS DISTRIBUTION & TOP PERFORMERS
+# ========================================================================
+try:
+    if not totals.empty and "total_points" in totals.columns:
+        viz_col1, viz_col2 = st.columns(2, gap="large")
+        
+        with viz_col1:
+            st.markdown("### 📊 Points Distribution")
+            
+            fig = go.Figure(data=[
+                go.Box(
+                    y=totals["total_points"],
+                    name="Total Points",
+                    marker_color="lightblue",
+                    boxmean="sd"
+                )
+            ])
+            
+            fig.update_layout(
+                showlegend=False,
+                height=300,
+                margin=dict(l=0, r=0, t=0, b=0),
+                yaxis_title="Points",
+                hovermode="closest"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with viz_col2:
+            st.markdown("### 🥇 Top Performers")
+            
+            top_teams = totals.nlargest(5, "total_points")[["team_name", "total_points"]]
+            
+            fig = go.Figure(data=[
+                go.Bar(
+                    x=top_teams["total_points"],
+                    y=top_teams["team_name"],
+                    orientation="h",
+                    marker=dict(
+                        color=top_teams["total_points"],
+                        colorscale="Viridis",
+                        showscale=False
+                    ),
+                    text=top_teams["total_points"],
+                    textposition="outside"
+                )
+            ])
+            
+            fig.update_layout(
+                showlegend=False,
+                height=300,
+                margin=dict(l=0, r=0, t=0, b=0),
+                xaxis_title="Points",
+                yaxis_title="",
+                hovermode="closest"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+except Exception as e:
+    logger.warning(f"Error displaying visualizations: {str(e)}")
+
+st.divider()
+
+# ========================================================================
+# DATA EXTRACTION PIPELINE CONTROL
+# ========================================================================
+st.markdown("## 🔄 Data Management")
+
+pipeline_col1, pipeline_col2 = st.columns([2, 1])
+
+with pipeline_col1:
+    st.markdown("### 📥 ETL Pipeline")
+    st.write("Manually trigger data extraction and synchronization from FPL API:")
+    
+    if st.button("▶️ Run ETL Pipeline", use_container_width=True):
+        try:
+            with st.spinner("⏳ Triggering ETL pipeline…"):
+                status, msg = trigger_pipeline()
+
+            if status == 204:
+                st.cache_data.clear()
+                st.success("✅ Pipeline triggered! Data will be updated shortly.")
+                logger.info("Pipeline triggered successfully")
+            else:
+                display_error(
+                    Exception(f"Status {status}: {msg}"),
+                    "Error triggering pipeline"
+                )
+        except Exception as e:
+            display_error(e, "Failed to trigger ETL pipeline")
+
+with pipeline_col2:
+    st.markdown("### ℹ️ Info")
+    with st.expander("About ETL"):
+        st.write(
+            "The ETL pipeline fetches the latest FPL data from the official API "
+            "and updates the Supabase database. This ensures all dashboard metrics "
+            "reflect the most current information."
+        )
+
+st.divider()
+
+# ========================================================================
+# FOOTER: DASHBOARD INFORMATION
+# ========================================================================
+with st.expander("📖 Dashboard Information & Tips"):
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🎯 Navigation:**")
+        st.write(
+            "- **Overall**: View league-wide statistics and comparisons\n"
+            "- **Managers**: Click any manager name to see their detailed performance\n"
+            "- **Fixtures**: Check upcoming matches and defensive/bonus point stats"
+        )
+    
+    with col2:
+        st.markdown("**💡 Tips:**")
+        st.write(
+            "- Use filters on individual manager pages for detailed analysis\n"
+            "- Check upcoming fixtures to plan your transfers\n"
+            "- Run ETL Pipeline to refresh data with latest FPL updates"
+        )
+    
+    st.markdown("---")
+    
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.markdown("**📊 Data Source:**")
+        st.write("Official Fantasy Premier League API + Supabase database")
+    
+    with col4:
+        st.markdown("**⚙️ Last Updated:**")
+        st.write(f"{datetime.now(timezone.utc).strftime('%d %b %Y, %H:%M UTC')}")
+
