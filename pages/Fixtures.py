@@ -125,7 +125,14 @@ def get_top_bonus_players(gw_data, home_team_id, away_team_id, gw):
 
 # --- INDIVIDUAL FIXTURES ---
 gameweeks = sorted(fixtures["event"].dropna().unique())
-selected_gw = st.selectbox("Select Gameweek", gameweeks)
+
+# Find current/next gameweek for default selection
+now = datetime.now(timezone.utc)
+upcoming_fixtures = fixtures[fixtures["kickoff_time"] >= now]
+current_gw = upcoming_fixtures["event"].min() if not upcoming_fixtures.empty else max(gameweeks)
+default_index = list(gameweeks).index(current_gw) if current_gw in gameweeks else 0
+
+selected_gw = st.selectbox("Select Gameweek", gameweeks, index=default_index)
 gw_fixtures = fixtures[fixtures["event"] == selected_gw].copy()
 gw_fixtures["Kickoff"] = gw_fixtures["kickoff_time"].dt.strftime("%A, %d %B %H:%M")
 
@@ -192,7 +199,7 @@ for idx, (_, row) in enumerate(gw_fixtures.iterrows()):
     
     st.markdown("---")
 
-# --- TABLE DATA ---
+# --- TABLE DATA (FIXTURES GRID - SHOWING UPCOMING GAMEWEEKS) ---
 teams_list = sorted(teams.values())
 table_data = pd.DataFrame(index=teams_list, columns=gameweeks)
 difficulty_data = pd.DataFrame(index=teams_list, columns=gameweeks)
@@ -208,12 +215,8 @@ for _, row in fixtures.iterrows():
     difficulty_data.loc[away, gw] = row["team_a_difficulty"]
     badge_data.loc[away, gw] = team_badges[home]
 
-# --- NEXT UPCOMING GAMEWEEK ---
-now = datetime.now(timezone.utc)
-upcoming_fixtures = fixtures[fixtures["kickoff_time"] >= now]
-next_gw = upcoming_fixtures["event"].min() if not upcoming_fixtures.empty else max(gameweeks)
-
-filtered_gameweeks = [gw for gw in gameweeks if gw >= next_gw]
+# Filter grid to show only current gameweek onwards (current_gw already calculated above)
+filtered_gameweeks = [gw for gw in gameweeks if gw >= current_gw]
 filtered_table_data = table_data[filtered_gameweeks]
 filtered_difficulty_data = difficulty_data[filtered_gameweeks]
 filtered_badge_data = badge_data[filtered_gameweeks]
