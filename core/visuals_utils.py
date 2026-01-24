@@ -93,10 +93,12 @@ def display_overview(manager_name: str, manager_df: pd.DataFrame):
         col_data, col_chart = st.columns([1, 1], gap="large")
         with col_data:
             st.subheader("Points by Gameweek")
+            # Show only current manager's row as a table
+            manager_row = team_gw_points.loc[[manager_name]]
             st.dataframe(
-                team_gw_points, 
+                manager_row, 
                 use_container_width=True,
-                height=300
+                height=100
             )
         with col_chart:
             st.subheader("Visual Breakdown")
