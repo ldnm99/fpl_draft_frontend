@@ -3,8 +3,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from supabase import create_client
-from supabase_client import SUPABASE_URL, SUPABASE_KEY
-from data_utils import (
+from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
+from core.data_utils import (
     load_data_supabase,
     get_manager_data,
     get_starting_lineup,
@@ -14,7 +14,7 @@ from data_utils import (
     get_top_performers,
     get_player_progression
 )
-from visuals_utils import (
+from core.visuals_utils import (
     display_overview,
     display_performance_trend,
     display_latest_gw,
@@ -60,4 +60,5 @@ display_player_progression(manager_df)
 
 # ---------------- OTHER STATS ----------------
 display_other_stats(manager_points, top_performances)
+
 

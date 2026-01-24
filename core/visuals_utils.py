@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from data_utils import (
+from core.data_utils import (
     get_starting_lineup,
     calculate_team_gw_points,
     get_teams_avg_points,

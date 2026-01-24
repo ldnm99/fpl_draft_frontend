@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from supabase import create_client
-from supabase_client import SUPABASE_URL, SUPABASE_KEY
-from visuals_utils import calc_defensive_points
-from data_utils import load_data_supabase
+from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
+from core.visuals_utils import calc_defensive_points
+from core.data_utils import load_data_supabase
 
 
 # ======================= CONFIGURATION =======================
@@ -92,3 +92,4 @@ for fixture in latest_df["fixture_name"].unique():
                 st.text(f"{row['short_name']} ({row['position']})")
                 st.progress(row["progress"])
                 st.caption(f"Total contributions: {row['total_contributions']} | Defensive points: {row['def_points']}")
+

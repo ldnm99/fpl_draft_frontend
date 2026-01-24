@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from data_utils import load_data_supabase, get_starting_lineup, calculate_team_gw_points, get_teams_avg_points
+from core.data_utils import load_data_supabase, get_starting_lineup, calculate_team_gw_points, get_teams_avg_points
 from supabase import create_client
-from supabase_client import SUPABASE_URL, SUPABASE_KEY
+from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
 
 
 # ======================= CONFIGURATION =======================
