@@ -24,6 +24,7 @@ from core.injury_utils import (
     get_at_risk_players,
     get_injury_summary
 )
+from core.pitch_visualization import display_squad_pitch
 
 # ============================================================
 #                    STYLING & CONFIGURATION
