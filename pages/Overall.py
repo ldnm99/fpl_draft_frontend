@@ -9,6 +9,7 @@ from core.data_utils import (
     get_teams_avg_points
 )
 from core.visuals_utils import display_league_optimized_lineups
+from core.mobile_utils import add_mobile_css, get_metric_columns, optimize_chart_height
 from supabase import create_client
 from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
 
@@ -17,6 +18,7 @@ from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
 # ============================================================
 
 st.set_page_config(layout="wide", page_title="FPL Overall Dashboard")
+add_mobile_css()  # Add mobile optimizations
 
 # ============================================================
 #                    DATA LOADING
@@ -100,7 +102,18 @@ avg_league_points = team_avg_points['avg_points'].mean()
 top_team = team_avg_points.loc[team_avg_points['avg_points'].idxmax()]
 bottom_team = team_avg_points.loc[team_avg_points['avg_points'].idxmin()]
 
-col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4, gap="medium")
+cols_kpi = get_metric_columns()
+
+col_kpi1 = cols_kpi[0]
+col_kpi2 = cols_kpi[1]
+if len(cols_kpi) == 4:
+    col_kpi3 = cols_kpi[2]
+    col_kpi4 = cols_kpi[3]
+else:
+    # Mobile: second row
+    cols_kpi2 = st.columns(2)
+    col_kpi3 = cols_kpi2[0]
+    col_kpi4 = cols_kpi2[1]
 
 col_kpi1.metric(
     "🏆 Teams in League",

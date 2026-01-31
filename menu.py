@@ -14,6 +14,7 @@ from core.data_utils import (
     get_team_total_points,
     load_data_supabase
 )
+from core.mobile_utils import add_mobile_css, get_metric_columns, optimize_chart_height
 from core.error_handler import (
     display_error,
     display_warning,
@@ -27,6 +28,7 @@ logger = get_logger(__name__)
 # PAGE CONFIGURATION
 # ========================================================================
 st.set_page_config(page_title="FPL Draft Menu", layout="wide")
+add_mobile_css()  # Add mobile optimizations
 
 # ========================================================================
 # SUPABASE CLIENT INITIALIZATION
@@ -140,23 +142,30 @@ st.markdown("Comprehensive league analytics and manager performance tracking")
 # ========================================================================
 if not standings.empty and not totals.empty:
     try:
-        col1, col2, col3, col4 = st.columns(4)
+        cols = get_metric_columns()  # 4 on desktop, 2 on mobile
         
-        with col1:
+        with cols[0]:
             num_managers = len(standings)
             st.metric("📊 Managers in League", num_managers)
         
-        with col2:
+        with cols[1]:
             if "Total Points" in totals.columns:
-                num_gw = len(standings)  # approximate based on num managers
+                num_gw = len(standings)
                 if num_gw > 0:
                     total_gw = totals["Total Points"].sum() / num_gw
-                    avg_gw = total_gw / 38  # approximate weeks per season
+                    avg_gw = total_gw / 38
                     st.metric("📈 Avg Points/GW", f"{avg_gw:.1f}")
                 else:
                     st.metric("📈 Avg Points/GW", "—")
             else:
                 st.metric("📈 Avg Points/GW", "—")
+        
+        # Second row on mobile, same row on desktop
+        if len(cols) == 2:
+            cols2 = st.columns(2)
+            col3, col4 = cols2[0], cols2[1]
+        else:
+            col3, col4 = cols[2], cols[3]
         
         with col3:
             if "Total Points" in totals.columns:
@@ -239,7 +248,13 @@ st.divider()
 # ========================================================================
 st.markdown("## 📊 League Standing & Upcoming Fixtures")
 
-dashboard_col1, dashboard_col2 = st.columns([1.5, 1], gap="large")
+# Mobile: stack vertically, Desktop: side by side
+dashboard_cols = st.columns([1.5, 1], gap="large") if not st.session_state.get("is_mobile", False) else [None, None]
+if dashboard_cols[0] is None:
+    dashboard_col1 = st.container()
+    dashboard_col2 = st.container()
+else:
+    dashboard_col1, dashboard_col2 = dashboard_cols
 
 # Left column: League standings
 with dashboard_col1:
