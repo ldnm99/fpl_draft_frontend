@@ -505,26 +505,30 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     results = []
     
     for team in teams:
-        team_df = df[df['manager_team_name'] == team]
+        team_df = df[df['manager_team_name'] == team].copy()
         
-        # Calculate actual points directly from starting XI
-        actual_total = team_df[team_df['team_position'] <= 11]['gw_points'].sum()
+        if team_df.empty:
+            continue
         
-        # Use get_all_optimal_lineups which correctly calculates gameweek-by-gameweek
+        # Use exact same logic as manager pages: get_all_optimal_lineups returns DataFrame with actual and optimal per GW
         gw_results = get_all_optimal_lineups(team_df)
         
         if gw_results.empty:
             continue
         
-        # Sum optimal across all gameweeks (actual should match)
+        # Sum actual and optimal across all gameweeks - EXACTLY like the manager pages do
+        actual_total = gw_results['actual_points'].sum()
         optimal_total = gw_results['optimal_points'].sum()
+        
+        difference = optimal_total - actual_total
+        potential_gain_pct = (difference / actual_total * 100) if actual_total > 0 else 0
         
         results.append({
             'manager_team_name': team,
             'actual_points': int(actual_total),
             'optimal_points': int(optimal_total),
-            'difference': int(optimal_total - actual_total),
-            'potential_gain_pct': round((optimal_total - actual_total) / actual_total * 100, 1) if actual_total > 0 else 0
+            'difference': int(difference),
+            'potential_gain_pct': round(potential_gain_pct, 1)
         })
     
     result_df = pd.DataFrame(results)

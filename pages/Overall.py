@@ -385,7 +385,7 @@ with tab4:
 # ============================================================
 
 with tab5:
-    display_league_optimized_lineups(df)
+    display_league_optimized_lineups(filtered_df)
 
 st.markdown("---")
 
