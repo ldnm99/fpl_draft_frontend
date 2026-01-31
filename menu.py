@@ -147,22 +147,27 @@ if not standings.empty and not totals.empty:
             st.metric("📊 Managers in League", num_managers)
         
         with col2:
-            if "gw_points" in totals.columns:
-                avg_gw = totals["gw_points"].mean()
-                st.metric("📈 Avg Points/GW", f"{avg_gw:.1f}")
+            if "Total Points" in totals.columns:
+                num_gw = len(standings)  # approximate based on num managers
+                if num_gw > 0:
+                    total_gw = totals["Total Points"].sum() / num_gw
+                    avg_gw = total_gw / 38  # approximate weeks per season
+                    st.metric("📈 Avg Points/GW", f"{avg_gw:.1f}")
+                else:
+                    st.metric("📈 Avg Points/GW", "—")
             else:
                 st.metric("📈 Avg Points/GW", "—")
         
         with col3:
-            if "total_points" in totals.columns:
-                top_points = totals["total_points"].max()
+            if "Total Points" in totals.columns:
+                top_points = totals["Total Points"].max()
                 st.metric("🥇 Top Team Points", f"{int(top_points)}")
             else:
                 st.metric("🥇 Top Team Points", "—")
         
         with col4:
-            if "total_points" in totals.columns:
-                bottom_points = totals["total_points"].min()
+            if "Total Points" in totals.columns:
+                bottom_points = totals["Total Points"].min()
                 st.metric("🥈 Bottom Team Points", f"{int(bottom_points)}")
             else:
                 st.metric("🥈 Bottom Team Points", "—")
@@ -280,7 +285,7 @@ st.divider()
 # DATA VISUALIZATION: STANDINGS DISTRIBUTION & TOP PERFORMERS
 # ========================================================================
 try:
-    if not totals.empty and "total_points" in totals.columns:
+    if not totals.empty and "Total Points" in totals.columns:
         viz_col1, viz_col2 = st.columns(2, gap="large")
         
         with viz_col1:
@@ -288,7 +293,7 @@ try:
             
             fig = go.Figure(data=[
                 go.Box(
-                    y=totals["total_points"],
+                    y=totals["Total Points"],
                     name="Total Points",
                     marker_color="lightblue",
                     boxmean="sd"
@@ -308,19 +313,19 @@ try:
         with viz_col2:
             st.markdown("### 🥇 Top Performers")
             
-            top_teams = totals.nlargest(5, "total_points")[["team_name", "total_points"]]
+            top_teams = totals.nlargest(5, "Total Points")[["Team", "Total Points"]]
             
             fig = go.Figure(data=[
                 go.Bar(
-                    x=top_teams["total_points"],
-                    y=top_teams["team_name"],
+                    x=top_teams["Total Points"],
+                    y=top_teams["Team"],
                     orientation="h",
                     marker=dict(
-                        color=top_teams["total_points"],
+                        color=top_teams["Total Points"],
                         colorscale="Viridis",
                         showscale=False
                     ),
-                    text=top_teams["total_points"],
+                    text=top_teams["Total Points"],
                     textposition="outside"
                 )
             ])
