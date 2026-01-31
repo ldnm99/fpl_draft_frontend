@@ -19,7 +19,6 @@ from core.visuals_utils import (
     display_performance_trend,
     display_latest_gw,
     display_optimized_lineup,
-    display_player_progression,
     display_other_stats
 )
 # ======================= CONFIGURATION =======================
@@ -55,9 +54,7 @@ display_latest_gw(manager_df)
 # ----------- OPTIMIZED LINEUP -----------
 display_optimized_lineup(manager_df)
 
-# ---------------- PLAYER PROGRESSION ----------------
-display_player_progression(manager_df)
-
 # ---------------- OTHER STATS ----------------
 display_other_stats(manager_points, pd.DataFrame())
+
 
