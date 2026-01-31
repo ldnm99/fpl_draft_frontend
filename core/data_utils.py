@@ -493,7 +493,7 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     
     Returns a DataFrame with:
     - manager_team_name: Team name
-    - actual_points: Total actual points
+    - actual_points: Total actual points (starting XI only)
     - optimal_points: Total optimal points if best lineup was picked
     - difference: Potential gain
     - potential_gain_pct: Percentage gain
@@ -507,33 +507,14 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     for team in teams:
         team_df = df[df['manager_team_name'] == team]
         
-        # Get actual total points (only starting XI)
-        actual_total = team_df[team_df['team_position'] <= 11]['gw_points'].sum()
-        
-        # Calculate optimal points
-        optimal_result = get_optimal_lineup(team_df)
-        optimal_total = optimal_result['optimal_points']
-        
-        # Get all gameweeks for this team to sum up optimal points across season
-        for gw in sorted(team_df['gw'].unique()):
-            gw_data = team_df[team_df['gw'] == gw]
-            gw_optimal = get_optimal_lineup(team_df, gameweek=gw)
-            
-            if not results or results[-1]['manager_team_name'] != team:
-                results.append({
-                    'manager_team_name': team,
-                    'actual_points': 0,
-                    'optimal_points': 0
-                })
-        
-        # Recalculate properly - sum actual and optimal across all gameweeks
         actual_total = 0
         optimal_total = 0
         
+        # Sum actual and optimal points across all gameweeks
         for gw in sorted(team_df['gw'].unique()):
             gw_data = team_df[team_df['gw'] == gw]
             
-            # Actual points (starting XI only)
+            # Actual points (starting XI only, team_position 1-11)
             gw_actual = gw_data[gw_data['team_position'] <= 11]['gw_points'].sum()
             actual_total += gw_actual
             
@@ -553,6 +534,7 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     
     # Sort by actual points (descending)
     return result_df.sort_values('actual_points', ascending=False).reset_index(drop=True)
+
 
 def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
     """
