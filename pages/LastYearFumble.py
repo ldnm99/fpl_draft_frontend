@@ -20,7 +20,8 @@ from core.visuals_utils import (
     display_performance_trend,
     display_latest_gw,
     display_optimized_lineup,
-    display_other_stats
+    display_other_stats,
+    display_injury_alerts
 )
 
 
@@ -60,6 +61,9 @@ display_optimized_lineup(manager_df)
 
 # ---------------- OTHER STATS ----------------
 display_other_stats(manager_points, pd.DataFrame())
+
+
+
 
 
 

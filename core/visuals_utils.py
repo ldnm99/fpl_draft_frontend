@@ -19,6 +19,11 @@ from core.data_utils import (
     prepare_player_metrics,
     get_player_archetypes
 )
+from core.injury_utils import (
+    get_squad_status,
+    get_at_risk_players,
+    get_injury_summary
+)
 
 # ============================================================
 #                    STYLING & CONFIGURATION
@@ -1402,3 +1407,140 @@ def display_league_optimized_lineups(df: pd.DataFrame):
     col1.metric("📊 Total League Points (Actual)", int(result_df['Actual Points'].sum()))
     col2.metric("🚀 Total League Points (Optimal)", int(result_df['Optimal Points'].sum()))
     col3.metric("💡 League Potential Gain", int(result_df['Potential Gain'].sum()))
+
+
+# ============================================================
+#       INJURY & STATUS ALERTS
+# ============================================================
+
+def display_injury_alerts(manager_df: pd.DataFrame):
+    """
+    Display injury and status alerts for manager's squad.
+    Highlights at-risk and injured players.
+    """
+    st.header("⚕️ Squad Health Status", divider="rainbow")
+    
+    if manager_df.empty:
+        st.info("No data available.")
+        return
+    
+    # Get injury summary
+    summary = get_injury_summary(manager_df)
+    
+    # Show summary metrics
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    col1.metric("📋 Total Squad", summary['total_players'])
+    col2.metric("✅ Healthy", summary['healthy'], delta="players", delta_color="normal")
+    col3.metric("🟡 At Risk", summary['at_risk'], delta="players", delta_color="inverse")
+    col4.metric("🚨 Out", summary['out'], delta="players", delta_color="inverse")
+    col5.metric("⚠️ Starting At Risk", summary['starting_at_risk'], delta="critical", delta_color="inverse")
+    
+    st.markdown("---")
+    
+    # Get full squad status
+    squad_status = get_squad_status(manager_df, latest_gw_only=True)
+    
+    if squad_status.empty:
+        st.info("No injury data available.")
+        return
+    
+    # Display by status category
+    tab1, tab2, tab3 = st.tabs(["⚠️ At Risk Players", "📋 Full Squad Status", "📊 Risk Analysis"])
+    
+    with tab1:
+        at_risk = squad_status[squad_status['chance_of_playing'] < 100].copy()
+        
+        if at_risk.empty:
+            st.success("✅ No players at risk - full squad healthy!")
+        else:
+            st.warning(f"⚠️ {len(at_risk)} players with injury concerns")
+            
+            # Highlight starting XI at risk
+            starting_at_risk = at_risk[at_risk['is_starting'] == True]
+            if not starting_at_risk.empty:
+                st.error(f"🚨 **{len(starting_at_risk)} Starting XI players at risk!**")
+                display_cols = ['full_name', 'position', 'real_team', 'status', 'chance_of_playing', 'news']
+                at_risk_display = starting_at_risk[display_cols].copy()
+                at_risk_display.rename(columns={
+                    'full_name': 'Player',
+                    'position': 'Position',
+                    'real_team': 'Team',
+                    'status': 'Status',
+                    'chance_of_playing': 'Chance %',
+                    'news': 'Update'
+                }, inplace=True)
+                st.dataframe(at_risk_display, use_container_width=True, hide_index=True)
+            
+            # Show bench at risk
+            bench_at_risk = at_risk[at_risk['is_starting'] == False]
+            if not bench_at_risk.empty:
+                with st.expander(f"📌 {len(bench_at_risk)} Bench players at risk"):
+                    display_cols = ['full_name', 'position', 'real_team', 'status', 'chance_of_playing', 'news']
+                    bench_display = bench_at_risk[display_cols].copy()
+                    bench_display.rename(columns={
+                        'full_name': 'Player',
+                        'position': 'Position',
+                        'real_team': 'Team',
+                        'status': 'Status',
+                        'chance_of_playing': 'Chance %',
+                        'news': 'Update'
+                    }, inplace=True)
+                    st.dataframe(bench_display, use_container_width=True, hide_index=True)
+    
+    with tab2:
+        # Full squad status with color coding
+        display_cols = ['full_name', 'position', 'real_team', 'status', 'chance_of_playing', 'gw_points']
+        display_df = squad_status[display_cols].copy()
+        display_df['Type'] = display_df.apply(
+            lambda x: '🔴 Starting' if x['real_team'] and squad_status.loc[display_df.index.get_loc(x.name), 'is_starting'] else '⚪ Bench',
+            axis=1
+        )
+        
+        display_df.rename(columns={
+            'full_name': 'Player',
+            'position': 'Position',
+            'real_team': 'Team',
+            'status': 'Status',
+            'chance_of_playing': 'Chance %',
+            'gw_points': 'This GW'
+        }, inplace=True)
+        
+        st.dataframe(display_df, use_container_width=True, hide_index=True, height=500)
+    
+    with tab3:
+        st.subheader("Risk Distribution")
+        
+        risk_counts = squad_status['status'].value_counts().reset_index()
+        risk_counts.columns = ['Status', 'Count']
+        
+        fig = px.bar(
+            risk_counts,
+            x='Status',
+            y='Count',
+            color='Status',
+            color_discrete_map={
+                '✅ Healthy': '#2ecc71',
+                '🟡 At Risk': '#f39c12',
+                '⚠️ Doubtful': '#e74c3c',
+                '🚨 Out': '#c0392b'
+            },
+            title="Squad Health Distribution",
+            labels={'Count': 'Number of Players', 'Status': 'Player Status'}
+        )
+        fig.update_layout(height=400, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Chance of playing distribution
+        st.subheader("Chance of Playing Distribution")
+        
+        fig2 = px.histogram(
+            squad_status,
+            x='chance_of_playing',
+            nbins=5,
+            title="Distribution of Injury Risk",
+            labels={'chance_of_playing': 'Chance of Playing (%)', 'count': 'Players'},
+            color_discrete_sequence=['#3498db']
+        )
+        fig2.update_layout(height=400, showlegend=False)
+        st.plotly_chart(fig2, use_container_width=True)
