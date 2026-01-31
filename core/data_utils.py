@@ -501,42 +501,38 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
     
-    teams = df['manager_team_name'].dropna().unique()
     results = []
     
-    for team in teams:
-        team_df = df[df['manager_team_name'] == team].copy()
-        
-        if team_df.empty:
-            continue
-        
-        # Calculate actual points: SUM of gw_points for ALL players with team_position <= 11
-        # This should be the sum across ALL gameweeks
-        actual_starting_only = team_df[team_df['team_position'] <= 11]['gw_points'].sum()
-        
-        # But the manager page uses get_all_optimal_lineups which sums per gameweek
-        # Let's check if they match
-        gw_results = get_all_optimal_lineups(team_df)
-        
-        if gw_results.empty:
-            continue
-        
-        actual_from_gw = gw_results['actual_points'].sum()
-        optimal_total = gw_results['optimal_points'].sum()
-        
-        # Use the value from get_all_optimal_lineups since that's what the manager pages use
-        actual_total = actual_from_gw
-        
-        difference = optimal_total - actual_total
-        potential_gain_pct = (difference / actual_total * 100) if actual_total > 0 else 0
-        
-        results.append({
-            'manager_team_name': team,
-            'actual_points': int(actual_total),
-            'optimal_points': int(optimal_total),
-            'difference': int(difference),
-            'potential_gain_pct': round(potential_gain_pct, 1)
-        })
+    # Get actual points using the same method as Team Performance tab
+    starting_players = get_starting_lineup(df)  # Only team_position <= 11
+    team_gw_points = calculate_team_gw_points(starting_players)  # Pivot by manager and gw
+    
+    # team_gw_points has managers as index and gameweeks as columns, with a 'Total' column
+    if 'Total' in team_gw_points.columns:
+        for team_name in team_gw_points.index:
+            actual_total = team_gw_points.loc[team_name, 'Total']
+            
+            # Get optimal points
+            team_df = df[df['manager_team_name'] == team_name].copy()
+            if team_df.empty:
+                continue
+            
+            gw_results = get_all_optimal_lineups(team_df)
+            if gw_results.empty:
+                continue
+            
+            optimal_total = gw_results['optimal_points'].sum()
+            
+            difference = optimal_total - actual_total
+            potential_gain_pct = (difference / actual_total * 100) if actual_total > 0 else 0
+            
+            results.append({
+                'manager_team_name': team_name,
+                'actual_points': int(actual_total),
+                'optimal_points': int(optimal_total),
+                'difference': int(difference),
+                'potential_gain_pct': round(potential_gain_pct, 1)
+            })
     
     result_df = pd.DataFrame(results)
     
