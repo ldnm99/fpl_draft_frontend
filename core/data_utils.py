@@ -489,55 +489,10 @@ def get_all_optimal_lineups(manager_df: pd.DataFrame) -> pd.DataFrame:
 
 def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Calculate optimized lineups for all teams in the league.
-    
-    Returns a DataFrame with:
-    - manager_team_name: Team name
-    - actual_points: Total actual points (starting XI only)
-    - optimal_points: Total optimal points if best lineup was picked
-    - difference: Potential gain
-    - potential_gain_pct: Percentage gain
+    DEPRECATED: Not used by visualization anymore.
+    Use display_league_optimized_lineups instead.
     """
-    if df.empty:
-        return pd.DataFrame()
-    
-    results = []
-    
-    # Get actual points using the same method as Team Performance tab
-    starting_players = get_starting_lineup(df)  # Only team_position <= 11
-    team_gw_points = calculate_team_gw_points(starting_players)  # Pivot by manager and gw
-    
-    # team_gw_points has managers as index and gameweeks as columns, with a 'Total' column
-    if 'Total' in team_gw_points.columns:
-        for team_name in team_gw_points.index:
-            actual_total = team_gw_points.loc[team_name, 'Total']
-            
-            # Get optimal points
-            team_df = df[df['manager_team_name'] == team_name].copy()
-            if team_df.empty:
-                continue
-            
-            gw_results = get_all_optimal_lineups(team_df)
-            if gw_results.empty:
-                continue
-            
-            optimal_total = gw_results['optimal_points'].sum()
-            
-            difference = optimal_total - actual_total
-            potential_gain_pct = (difference / actual_total * 100) if actual_total > 0 else 0
-            
-            results.append({
-                'manager_team_name': team_name,
-                'actual_points': int(actual_total),
-                'optimal_points': int(optimal_total),
-                'difference': int(difference),
-                'potential_gain_pct': round(potential_gain_pct, 1)
-            })
-    
-    result_df = pd.DataFrame(results)
-    
-    # Sort by actual points (descending)
-    return result_df.sort_values('actual_points', ascending=False).reset_index(drop=True)
+    pass
 
 
 def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
