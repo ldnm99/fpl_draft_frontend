@@ -505,15 +505,24 @@ def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
     
-    # Group by player and calculate metrics
-    player_stats = df.groupby(['full_name', 'position']).agg({
-        'gw_points': ['sum', 'mean', 'std', 'count'],
-        'gw_bonus': ['sum', 'mean'],
-        'real_team': 'first'
-    }).reset_index()
+    # Ensure we have the required columns
+    required_cols = ['full_name', 'position', 'gw_points']
+    if not all(col in df.columns for col in required_cols):
+        return pd.DataFrame()
     
-    player_stats.columns = ['player_name', 'position', 'total_points', 'avg_points', 
-                            'std_points', 'games_played', 'total_bonus', 'avg_bonus', 'team']
+    # Group by player and calculate metrics
+    try:
+        player_stats = df.groupby(['full_name', 'position']).agg({
+            'gw_points': ['sum', 'mean', 'std', 'count'],
+            'gw_bonus': ['sum', 'mean'],
+            'real_team': 'first'
+        }).reset_index()
+        
+        player_stats.columns = ['player_name', 'position', 'total_points', 'avg_points', 
+                                'std_points', 'games_played', 'total_bonus', 'avg_bonus', 'team']
+    except Exception as e:
+        logger.error(f"Error in player metrics aggregation: {str(e)}")
+        return pd.DataFrame()
     
     # Calculate derived metrics
     player_stats['consistency'] = player_stats.apply(
@@ -707,14 +716,22 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
     
-    consistency_data = df.groupby(['full_name', 'position']).agg({
-        'gw_points': ['mean', 'std', 'min', 'max', 'count'],
-        'real_team': 'first',
-        'gw_bonus': 'sum'
-    }).reset_index()
+    # Ensure we have the required columns
+    if 'gw_points' not in df.columns or 'full_name' not in df.columns or 'position' not in df.columns:
+        return pd.DataFrame()
     
-    consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
-                                'min_points', 'max_points', 'games', 'team', 'total_bonus']
+    try:
+        consistency_data = df.groupby(['full_name', 'position']).agg({
+            'gw_points': ['mean', 'std', 'min', 'max', 'count'],
+            'real_team': 'first',
+            'gw_bonus': 'sum'
+        }).reset_index()
+        
+        consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
+                                    'min_points', 'max_points', 'games', 'team', 'total_bonus']
+    except Exception as e:
+        logger.error(f"Error in consistency calculation: {str(e)}")
+        return pd.DataFrame()
     
     # Calculate coefficient of variation
     consistency_data['cv'] = consistency_data.apply(
