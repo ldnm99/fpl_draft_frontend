@@ -61,4 +61,3 @@ display_player_progression(manager_df)
 # ---------------- OTHER STATS ----------------
 display_other_stats(manager_points, pd.DataFrame())
 
-

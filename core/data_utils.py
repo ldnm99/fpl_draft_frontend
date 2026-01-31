@@ -485,3 +485,285 @@ def get_all_optimal_lineups(manager_df: pd.DataFrame) -> pd.DataFrame:
         })
     
     return pd.DataFrame(results)
+
+
+# ============================================================
+#      DATA SCIENCE ANALYSIS - PLAYER CLUSTERING & TRENDS
+# ============================================================
+
+def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Prepare player performance metrics for clustering analysis.
+    
+    Creates normalized features from player statistics:
+    - Points per game (efficiency)
+    - Goal/Assist contribution ratio
+    - Consistency (coefficient of variation)
+    - Playing time impact
+    - Clean sheet value (for defenders/keepers)
+    """
+    if df.empty:
+        return pd.DataFrame()
+    
+    # Group by player and calculate metrics
+    player_stats = df.groupby(['full_name', 'position']).agg({
+        'gw_points': ['sum', 'mean', 'std', 'count'],
+        'gw_bonus': ['sum', 'mean'],
+        'real_team': 'first'
+    }).reset_index()
+    
+    player_stats.columns = ['player_name', 'position', 'total_points', 'avg_points', 
+                            'std_points', 'games_played', 'total_bonus', 'avg_bonus', 'team']
+    
+    # Calculate derived metrics
+    player_stats['consistency'] = player_stats.apply(
+        lambda x: x['std_points'] / x['avg_points'] if x['avg_points'] > 0 else 0,
+        axis=1
+    )
+    
+    player_stats['bonus_efficiency'] = player_stats['total_bonus'] / player_stats['games_played']
+    
+    # Position-based metrics
+    player_stats['points_per_appearance'] = player_stats['avg_points']
+    
+    # Normalize metrics to 0-1 scale per position for fair comparison
+    for pos in player_stats['position'].unique():
+        pos_mask = player_stats['position'] == pos
+        
+        if player_stats.loc[pos_mask, 'avg_points'].max() > 0:
+            player_stats.loc[pos_mask, 'avg_points_norm'] = (
+                player_stats.loc[pos_mask, 'avg_points'] / 
+                player_stats.loc[pos_mask, 'avg_points'].max()
+            )
+        else:
+            player_stats.loc[pos_mask, 'avg_points_norm'] = 0
+        
+        max_consistency = player_stats.loc[pos_mask, 'consistency'].max()
+        if max_consistency > 0:
+            player_stats.loc[pos_mask, 'consistency_norm'] = (
+                max_consistency - player_stats.loc[pos_mask, 'consistency']
+            ) / max_consistency  # Invert: lower std is better (higher normalized)
+        else:
+            player_stats.loc[pos_mask, 'consistency_norm'] = 1
+        
+        if player_stats.loc[pos_mask, 'bonus_efficiency'].max() > 0:
+            player_stats.loc[pos_mask, 'bonus_norm'] = (
+                player_stats.loc[pos_mask, 'bonus_efficiency'] / 
+                player_stats.loc[pos_mask, 'bonus_efficiency'].max()
+            )
+        else:
+            player_stats.loc[pos_mask, 'bonus_norm'] = 0
+    
+    return player_stats
+
+
+def cluster_players(df: pd.DataFrame, n_clusters: int = 4, position: str = None) -> dict:
+    """
+    Cluster players using K-means clustering based on performance metrics.
+    
+    Parameters:
+    - df: Manager dataframe with player data
+    - n_clusters: Number of clusters to create (2-5 recommended)
+    - position: Filter by position (GK, DEF, MID, FWD) or None for all
+    
+    Returns dict with:
+    - cluster_df: DataFrame with cluster assignments
+    - silhouette_score: Quality metric (0-1, higher is better)
+    - cluster_centers: Characteristics of each cluster
+    """
+    try:
+        from sklearn.cluster import KMeans
+        from sklearn.metrics import silhouette_score
+    except ImportError:
+        return {
+            'cluster_df': pd.DataFrame(),
+            'silhouette_score': 0,
+            'cluster_centers': pd.DataFrame(),
+            'error': 'scikit-learn not installed'
+        }
+    
+    player_metrics = prepare_player_metrics(df)
+    
+    if player_metrics.empty:
+        return {
+            'cluster_df': pd.DataFrame(),
+            'silhouette_score': 0,
+            'cluster_centers': pd.DataFrame(),
+            'error': 'No player metrics available'
+        }
+    
+    # Filter by position if specified
+    if position:
+        player_metrics = player_metrics[player_metrics['position'] == position].copy()
+    
+    if len(player_metrics) < n_clusters:
+        return {
+            'cluster_df': player_metrics,
+            'silhouette_score': 0,
+            'cluster_centers': pd.DataFrame(),
+            'error': f'Not enough players ({len(player_metrics)}) for {n_clusters} clusters'
+        }
+    
+    # Features for clustering
+    features = ['avg_points_norm', 'consistency_norm', 'bonus_norm']
+    X = player_metrics[features].fillna(0).values
+    
+    # Apply K-means
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    player_metrics['cluster'] = kmeans.fit_predict(X)
+    
+    # Calculate silhouette score
+    sil_score = silhouette_score(X, player_metrics['cluster'])
+    
+    # Cluster centers with interpretation
+    cluster_centers = pd.DataFrame(
+        kmeans.cluster_centers_,
+        columns=features
+    )
+    cluster_centers['cluster'] = range(n_clusters)
+    
+    return {
+        'cluster_df': player_metrics,
+        'silhouette_score': sil_score,
+        'cluster_centers': cluster_centers
+    }
+
+
+def analyze_player_trend(df: pd.DataFrame, player_name: str) -> dict:
+    """
+    Analyze player performance trend over season using linear regression.
+    
+    Returns dict with:
+    - trend_df: DataFrame with trend data per gameweek
+    - slope: Trend direction (positive = improving, negative = declining)
+    - r_squared: Fit quality (0-1, higher = better)
+    - classification: 'Improving', 'Declining', or 'Stable'
+    - predicted_next_gw: Predicted points for next gameweek
+    """
+    try:
+        from scipy.stats import linregress
+    except ImportError:
+        return {'error': 'scipy not installed'}
+    
+    player_data = df[df['full_name'] == player_name].sort_values('gw').copy()
+    
+    if player_data.empty or len(player_data) < 2:
+        return {'error': f'Insufficient data for {player_name}'}
+    
+    # Prepare data
+    X = player_data['gw'].values
+    y = player_data['gw_points'].values
+    
+    # Handle missing values
+    valid_mask = ~(pd.isna(X) | pd.isna(y))
+    X = X[valid_mask]
+    y = y[valid_mask]
+    
+    if len(X) < 2:
+        return {'error': 'Not enough valid gameweeks'}
+    
+    # Linear regression
+    slope, intercept, r_value, p_value, std_err = linregress(X, y)
+    r_squared = r_value ** 2
+    
+    # Classification
+    if abs(slope) < 0.05:
+        classification = 'Stable'
+    elif slope > 0:
+        classification = 'Improving'
+    else:
+        classification = 'Declining'
+    
+    # Predict next gameweek
+    last_gw = max(X)
+    predicted_next = slope * (last_gw + 1) + intercept
+    
+    # Trend dataframe
+    trend_df = player_data[['gw', 'full_name', 'position', 'gw_points', 'real_team']].copy()
+    trend_df['trend_line'] = slope * X + intercept
+    
+    return {
+        'trend_df': trend_df,
+        'slope': slope,
+        'r_squared': r_squared,
+        'classification': classification,
+        'predicted_next_gw': max(0, predicted_next),
+        'p_value': p_value,
+        'std_err': std_err,
+        'gameweeks_analyzed': len(X)
+    }
+
+
+def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate consistency metrics for all players.
+    
+    Returns DataFrame with:
+    - player_name, position, team
+    - avg_points, std_points, min_points, max_points
+    - coefficient_of_variation (consistency metric)
+    - consistency_score (0-100, higher = more consistent)
+    """
+    if df.empty:
+        return pd.DataFrame()
+    
+    consistency_data = df.groupby(['full_name', 'position']).agg({
+        'gw_points': ['mean', 'std', 'min', 'max', 'count'],
+        'real_team': 'first',
+        'gw_bonus': 'sum'
+    }).reset_index()
+    
+    consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
+                                'min_points', 'max_points', 'games', 'team', 'total_bonus']
+    
+    # Calculate coefficient of variation
+    consistency_data['cv'] = consistency_data.apply(
+        lambda x: x['std_points'] / x['avg_points'] if x['avg_points'] > 0 else 0,
+        axis=1
+    )
+    
+    # Calculate consistency score (0-100, higher = better)
+    # Formula: 100 * (1 - cv), capped at 100
+    consistency_data['consistency_score'] = (
+        100 * (1 - consistency_data['cv']).clip(lower=0, upper=1)
+    )
+    
+    # Performance stability (max-min relative to mean)
+    consistency_data['performance_range'] = consistency_data.apply(
+        lambda x: (x['max_points'] - x['min_points']) / x['avg_points'] 
+        if x['avg_points'] > 0 else 0,
+        axis=1
+    )
+    
+    return consistency_data.sort_values('consistency_score', ascending=False)
+
+
+def get_player_archetypes(df: pd.DataFrame) -> dict:
+    """
+    Identify player archetypes based on clustering.
+    
+    Creates profiles for each cluster:
+    - High Performers (high avg points)
+    - Consistent Players (low variance)
+    - Bonus Hunters (high bonus points)
+    - Rising Stars (improving trend)
+    - Declining Players (declining trend)
+    """
+    if df.empty:
+        return {}
+    
+    player_metrics = prepare_player_metrics(df)
+    
+    archetypes = {
+        'High Performers': player_metrics.nlargest(5, 'avg_points')[
+            ['player_name', 'avg_points', 'position']
+        ],
+        'Most Consistent': player_metrics.nsmallest(5, 'consistency')[
+            ['player_name', 'consistency', 'position']
+        ],
+        'Bonus Hunters': player_metrics.nlargest(5, 'bonus_efficiency')[
+            ['player_name', 'bonus_efficiency', 'position']
+        ],
+    }
+    
+    return archetypes

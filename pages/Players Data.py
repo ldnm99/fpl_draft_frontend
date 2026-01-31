@@ -20,7 +20,11 @@ from core.visuals_utils import (
     display_performance_trend,
     display_latest_gw,
     display_player_progression,
-    display_other_stats
+    display_other_stats,
+    display_player_clustering,
+    display_player_trends,
+    display_consistency_analysis,
+    display_player_archetypes_analysis
 )
 
 
@@ -39,38 +43,78 @@ df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack 
 players = pd.read_csv("Data/players_data.csv")
 
 
-# ---------------- DASHBOARD TITLE ------------------
-st.title("FPL Draft Players Data")
+# ======================= PAGE TITLE =======================
+st.title("📊 FPL Players Data Analysis")
+st.markdown("Comprehensive data science analysis of player performance, trends, and archetypes")
 
-# ---------------- ALL PLAYERS --------------------------
-selected_player = st.selectbox("Select Player", options=[""] + sorted(players['name'].unique().tolist()))
+# ======================= TABS =======================
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "📋 Player Data", 
+    "🎯 Clustering Analysis", 
+    "📈 Trend Analysis",
+    "🎭 Archetypes",
+    "📊 Consistency"
+])
 
-if selected_player:
-    players = players[players['name'] == selected_player]
+# ======================= TAB 1: PLAYER DATA =======================
+with tab1:
+    st.header("Player Data Overview")
+    
+    col1, col2 = st.columns(2, gap="large")
+    
+    with col1:
+        st.subheader("All Players (Season Summary)")
+        
+        # Player selection
+        selected_player = st.selectbox("Select Player", options=[""] + sorted(players['name'].unique().tolist()))
+        
+        if selected_player:
+            filtered_players = players[players['name'] == selected_player]
+        else:
+            filtered_players = players.copy()
+        
+        filtered_players = filtered_players[['name','team','Total points','position','Goals Scored','Assists','CS','xG','starts','yellow_cards','red_cards','news']]
+        filtered_players.rename(columns={'name': 'Name', 'team': 'Team', 'Total points': 'Total Points', 'position': 'Position', 'Goals Scored': 'Goals Scored', 'Assists': 'Assists', 'CS': 'Clean Sheets', 'xG': 'xG', 'starts': 'Starts', 'yellow_cards': 'Yellow Cards', 'red_cards': 'Red Cards', 'news': 'News'}, inplace=True)
+        
+        st.dataframe(filtered_players, use_container_width=True)
+    
+    with col2:
+        st.subheader("Gameweek Performance Data")
+        
+        # Filters
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            owned_only = st.checkbox("Show owned players")
+        with col_f2:
+            not_owned_only = st.checkbox("Show not owned players")
+        
+        # Filter logic
+        filtered_df = df.copy()
+        
+        if owned_only:
+            filtered_df = filtered_df[filtered_df['team_name'].notnull()]
+        
+        if not_owned_only:
+            filtered_df = filtered_df[filtered_df['team_name'].isnull()]
+        
+        filtered_df = filtered_df[['team_name','full_name','real_team','gw_points','gw','total_points','goals_scored','assists','gw_bonus','minutes','expected_goals','expected_assists','position']]
+        filtered_df.rename(columns={'team_name': 'Manager', 'full_name': 'Name', 'real_team': 'Team', 'gw_points': 'GW Points', 'gw': 'Gameweek', 'total_points': 'Season Points', 'goals_scored': 'GW Goals', 'assists': 'GW Assists', 'gw_bonus': 'GW Bonus', 'minutes': 'GW Minutes', 'expected_goals': 'GW xG', 'expected_assists': 'GW xA', 'position': 'Position'}, inplace=True)
+        
+        st.dataframe(filtered_df, use_container_width=True, height=400)
 
+# ======================= TAB 2: CLUSTERING =======================
+with tab2:
+    display_player_clustering(df)
 
-players = players[['name','team','Total points','position','Goals Scored','Assists','CS','xG','starts','yellow_cards','red_cards','news']]
-players.rename(columns={'name': 'Name', 'team': 'Team', 'Total points': 'Total Points', 'position': 'Position', 'Goals Scored': 'Goals Scored', 'Assists': 'Assists', 'CS': 'Clean Sheets', 'xG': 'xG', 'starts': 'Starts', 'yellow_cards': 'Yellow Cards', 'red_cards': 'Red Cards', 'news': 'News'}, inplace=True)
+# ======================= TAB 3: TRENDS =======================
+with tab3:
+    display_player_trends(df)
 
-# Display filtered dataframe
-st.dataframe(players, use_container_width=True)
+# ======================= TAB 4: ARCHETYPES =======================
+with tab4:
+    display_player_archetypes_analysis(df)
 
-# ---------------- FILTERS --------------------------
+# ======================= TAB 5: CONSISTENCY =======================
+with tab5:
+    display_consistency_analysis(df)
 
-# Checkbox for owned players only
-owned_only = st.checkbox("Show owned players")
-
-# Checkbox for not owned players only
-not_owned_only = st.checkbox("Show not owned players")
-
-if owned_only:
-    df = df[df['team_name'].notnull()]
-
-if not_owned_only:
-    df = df[df['team_name'].isnull()]
-
-df = df[['team_name','name','team','Total points','gameweek','total_points','goals_scored','assists','bonus_x','minutes_x','expected_goals','expected_assists_x','defensive_contribution_x','position']]
-df.rename(columns={'team_name': 'Manager', 'name': 'Name', 'team': 'Team', 'Total points': 'Season Points', 'gameweek': 'Gameweek', 'total_points': 'GW Points', 'goals_scored': 'GW Goals', 'assists': 'GW Assists', 'bonus_x': 'GW Bonus', 'minutes_x': 'GW Minutes', 'expected_goals': 'GW xG', 'expected_assists_x': 'GW xA', 'defensive_contribution_x': 'GW Def Contribution', 'position': 'Position'}, inplace=True)
-
-# Display filtered dataframe
-st.dataframe(df, use_container_width=True)

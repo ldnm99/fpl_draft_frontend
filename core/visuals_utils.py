@@ -2,6 +2,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 from core.data_utils import (
     get_starting_lineup,
     calculate_team_gw_points,
@@ -10,7 +11,12 @@ from core.data_utils import (
     get_top_performers,
     get_player_progression,
     get_optimal_lineup,
-    get_all_optimal_lineups
+    get_all_optimal_lineups,
+    cluster_players,
+    analyze_player_trend,
+    calculate_player_consistency,
+    prepare_player_metrics,
+    get_player_archetypes
 )
 
 # ============================================================
@@ -883,3 +889,418 @@ def display_optimized_lineup(manager_df: pd.DataFrame):
             file_name=f"optimized_lineup_{selected_gw}.csv",
             mime="text/csv"
         )
+
+
+# ============================================================
+#          DATA SCIENCE ANALYSIS - PLAYERS SECTION
+# ============================================================
+
+def display_player_clustering(df: pd.DataFrame):
+    """
+    Display player clustering analysis with archetypes and characteristics.
+    """
+    st.header("🎯 Player Performance Clustering", divider="rainbow")
+    
+    if df.empty:
+        st.info("No data available for clustering analysis.")
+        return
+    
+    # Get unique positions
+    positions = sorted(df['position'].unique())
+    
+    col_select, col_info = st.columns([2, 1])
+    
+    with col_select:
+        selected_position = st.selectbox(
+            "Select Position to Analyze",
+            options=["All Positions"] + positions
+        )
+    
+    with col_info:
+        st.markdown("<br>", unsafe_allow_html=True)
+        n_clusters = st.slider("Number of Clusters", min_value=2, max_value=5, value=3)
+    
+    st.markdown("---")
+    
+    # Prepare data
+    analysis_df = df if selected_position == "All Positions" else df[df['position'] == selected_position]
+    
+    # Run clustering
+    clustering_result = cluster_players(analysis_df, n_clusters=n_clusters, 
+                                       position=None if selected_position == "All Positions" else selected_position)
+    
+    if 'error' in clustering_result:
+        st.warning(f"⚠️ {clustering_result['error']}")
+        return
+    
+    cluster_df = clustering_result['cluster_df']
+    sil_score = clustering_result['silhouette_score']
+    
+    if cluster_df.empty:
+        st.info("No clustering data available.")
+        return
+    
+    # --- Quality Metrics ---
+    col_metric1, col_metric2, col_metric3 = st.columns(3)
+    
+    col_metric1.metric(
+        "📊 Silhouette Score",
+        f"{sil_score:.3f}",
+        help="Higher = better separated clusters (0-1 scale)"
+    )
+    col_metric2.metric(
+        "👥 Players Analyzed",
+        len(cluster_df)
+    )
+    col_metric3.metric(
+        "🎯 Clusters",
+        n_clusters
+    )
+    
+    st.markdown("---")
+    
+    # --- Three Tabs ---
+    tab1, tab2, tab3 = st.tabs(["📈 Cluster Visualization", "📋 Player Groups", "🔍 Cluster Characteristics"])
+    
+    with tab1:
+        st.subheader("Player Clusters (Performance Space)")
+        
+        # Create scatter plot
+        fig = px.scatter(
+            cluster_df,
+            x='avg_points_norm',
+            y='consistency_norm',
+            color='cluster',
+            size='games_played',
+            hover_data=['player_name', 'position', 'avg_points', 'consistency'],
+            labels={
+                'avg_points_norm': 'Average Points (Normalized)',
+                'consistency_norm': 'Consistency (Normalized)',
+                'cluster': 'Cluster'
+            },
+            title="Player Clustering: Average Points vs Consistency",
+            color_discrete_sequence=px.colors.qualitative.Set1
+        )
+        fig.update_layout(height=500, hovermode='closest')
+        st.plotly_chart(fig, use_container_width=True, key="cluster_scatter")
+    
+    with tab2:
+        st.subheader("Players by Cluster Group")
+        
+        for cluster_id in sorted(cluster_df['cluster'].unique()):
+            cluster_players_df = cluster_df[cluster_df['cluster'] == cluster_id].copy()
+            cluster_players_df = cluster_players_df.sort_values('avg_points', ascending=False)
+            
+            with st.expander(f"🔹 Cluster {cluster_id} ({len(cluster_players_df)} players)", expanded=(cluster_id == 0)):
+                display_cols = ['player_name', 'position', 'team', 'avg_points', 
+                               'std_points', 'games_played', 'consistency']
+                
+                col_table, col_stats = st.columns([2, 1])
+                
+                with col_table:
+                    st.dataframe(
+                        cluster_players_df[display_cols],
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                
+                with col_stats:
+                    st.write("**Cluster Stats:**")
+                    st.metric("Avg Points", f"{cluster_players_df['avg_points'].mean():.2f}")
+                    st.metric("Avg Consistency", f"{cluster_players_df['consistency'].mean():.2f}")
+                    st.metric("Total Games", int(cluster_players_df['games_played'].sum()))
+    
+    with tab3:
+        st.subheader("Cluster Characteristics")
+        
+        cluster_centers = clustering_result['cluster_centers']
+        
+        # Heatmap of cluster characteristics
+        fig = px.imshow(
+            cluster_centers.set_index('cluster')[['avg_points_norm', 'consistency_norm', 'bonus_norm']],
+            labels=dict(x="Metric", y="Cluster", color="Score"),
+            x=['Avg Points', 'Consistency', 'Bonus'],
+            y=[f'Cluster {i}' for i in range(n_clusters)],
+            color_continuous_scale='RdYlGn',
+            aspect='auto',
+            title="Cluster Characteristics Heatmap"
+        )
+        fig.update_layout(height=300)
+        st.plotly_chart(fig, use_container_width=True, key="cluster_heatmap")
+        
+        # Cluster descriptions
+        cluster_descriptions = {
+            0: "Primary cluster - baseline performance",
+            1: "Secondary cluster - alternative performance profile",
+            2: "Tertiary cluster - another performance group",
+            3: "Quaternary cluster",
+            4: "Quinary cluster"
+        }
+        
+        for cluster_id in sorted(cluster_df['cluster'].unique()):
+            cluster_data = cluster_df[cluster_df['cluster'] == cluster_id]
+            
+            st.write(f"**Cluster {cluster_id}** - {cluster_descriptions.get(cluster_id, 'Cluster group')}")
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Avg Points", f"{cluster_data['avg_points'].mean():.2f}")
+            col2.metric("Consistency", f"{cluster_data['consistency'].mean():.2f}")
+            col3.metric("Players", len(cluster_data))
+            col4.metric("Total Games", int(cluster_data['games_played'].sum()))
+
+
+def display_player_trends(df: pd.DataFrame):
+    """
+    Display player trend analysis (improving/declining over season).
+    """
+    st.header("📈 Player Performance Trends", divider="rainbow")
+    
+    if df.empty:
+        st.info("No data available for trend analysis.")
+        return
+    
+    # Player selection
+    players = sorted(df['full_name'].unique())
+    
+    col_select, col_filter = st.columns([2, 1])
+    
+    with col_select:
+        selected_player = st.selectbox(
+            "Select Player to Analyze",
+            options=players,
+            help="Choose a player to see their season trend"
+        )
+    
+    with col_filter:
+        show_trend_line = st.checkbox("Show Trend Line", value=True)
+    
+    st.markdown("---")
+    
+    # Analyze trend
+    trend_result = analyze_player_trend(df, selected_player)
+    
+    if 'error' in trend_result:
+        st.warning(f"⚠️ {trend_result['error']}")
+        return
+    
+    trend_df = trend_result['trend_df']
+    slope = trend_result['slope']
+    r_squared = trend_result['r_squared']
+    classification = trend_result['classification']
+    predicted_next = trend_result['predicted_next_gw']
+    
+    # --- Metrics Row ---
+    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+    
+    col_m1.metric("📊 Classification", classification)
+    col_m2.metric("📈 Trend Slope", f"{slope:.3f}", help="Points per gameweek change")
+    col_m3.metric("🎯 Fit Quality (R²)", f"{r_squared:.3f}", help="0-1: higher = better fit")
+    col_m4.metric("🔮 Next GW Prediction", f"{predicted_next:.1f}")
+    
+    st.markdown("---")
+    
+    # --- Trend Visualization ---
+    col_chart, col_table = st.columns([2, 1], gap="large")
+    
+    with col_chart:
+        st.subheader("Performance Over Season")
+        
+        fig = go.Figure()
+        
+        # Actual points
+        fig.add_trace(go.Scatter(
+            x=trend_df['gw'],
+            y=trend_df['gw_points'],
+            mode='lines+markers',
+            name='Actual Points',
+            line=dict(color='#3498db', width=2),
+            marker=dict(size=8)
+        ))
+        
+        # Trend line if selected
+        if show_trend_line:
+            fig.add_trace(go.Scatter(
+                x=trend_df['gw'],
+                y=trend_df['trend_line'],
+                mode='lines',
+                name='Trend Line',
+                line=dict(color='#e74c3c', width=3, dash='dash')
+            ))
+        
+        # Future prediction
+        future_gw = max(trend_df['gw']) + 1
+        fig.add_trace(go.Scatter(
+            x=[max(trend_df['gw']), future_gw],
+            y=[trend_df['trend_line'].iloc[-1], predicted_next],
+            mode='lines+markers',
+            name='Prediction',
+            line=dict(color='#2ecc71', width=2, dash='dot'),
+            marker=dict(size=8, symbol='diamond')
+        ))
+        
+        fig.update_layout(
+            title=f"{selected_player} - Season Performance Trend",
+            xaxis_title="Gameweek",
+            yaxis_title="Points",
+            height=400,
+            hovermode='x unified'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True, key="trend_analysis")
+    
+    with col_table:
+        st.subheader("Season Summary")
+        
+        player_info = trend_df.iloc[0] if not trend_df.empty else {}
+        
+        st.write(f"**Position:** {player_info.get('position', 'N/A')}")
+        st.write(f"**Team:** {player_info.get('real_team', 'N/A')}")
+        
+        st.divider()
+        
+        st.metric("Total Points", f"{trend_df['gw_points'].sum():.0f}")
+        st.metric("Average", f"{trend_df['gw_points'].mean():.1f}")
+        st.metric("Max", f"{trend_df['gw_points'].max():.0f}")
+        st.metric("Min", f"{trend_df['gw_points'].min():.0f}")
+        st.metric("Std Dev", f"{trend_df['gw_points'].std():.2f}")
+
+
+def display_consistency_analysis(df: pd.DataFrame):
+    """
+    Display player consistency rankings and performance stability.
+    """
+    st.header("📊 Player Consistency Analysis", divider="rainbow")
+    
+    if df.empty:
+        st.info("No data available for consistency analysis.")
+        return
+    
+    # Calculate consistency
+    consistency_df = calculate_player_consistency(df)
+    
+    if consistency_df.empty:
+        st.info("No consistency data available.")
+        return
+    
+    # Position filter
+    selected_position = st.selectbox(
+        "Filter by Position",
+        options=["All Positions"] + sorted(consistency_df['position'].unique())
+    )
+    
+    if selected_position != "All Positions":
+        display_df = consistency_df[consistency_df['position'] == selected_position].copy()
+    else:
+        display_df = consistency_df.copy()
+    
+    st.markdown("---")
+    
+    # --- Tabs ---
+    tab1, tab2, tab3 = st.tabs(["🏆 Rankings", "📈 Distribution", "📋 Detailed Metrics"])
+    
+    with tab1:
+        st.subheader("Consistency Rankings")
+        
+        col_most, col_least = st.columns(2, gap="large")
+        
+        with col_most:
+            st.write("**Most Consistent Players**")
+            top_consistent = display_df.nlargest(10, 'consistency_score')[
+                ['player_name', 'position', 'team', 'consistency_score', 'avg_points']
+            ].copy()
+            
+            fig = px.bar(
+                top_consistent,
+                y='player_name',
+                x='consistency_score',
+                color='consistency_score',
+                color_continuous_scale='RdYlGn',
+                range_color=[0, 100],
+                text='consistency_score',
+                orientation='h'
+            )
+            fig.update_traces(texttemplate='%{value:.1f}', textposition='outside')
+            fig.update_layout(height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True, key="consistency_top")
+        
+        with col_least:
+            st.write("**Most Volatile Players**")
+            least_consistent = display_df.nsmallest(10, 'consistency_score')[
+                ['player_name', 'position', 'team', 'consistency_score', 'avg_points']
+            ].copy()
+            
+            fig = px.bar(
+                least_consistent,
+                y='player_name',
+                x='consistency_score',
+                color='consistency_score',
+                color_continuous_scale='RdYlGn',
+                range_color=[0, 100],
+                text='consistency_score',
+                orientation='h'
+            )
+            fig.update_traces(texttemplate='%{value:.1f}', textposition='outside')
+            fig.update_layout(height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True, key="consistency_bottom")
+    
+    with tab2:
+        st.subheader("Consistency Score Distribution")
+        
+        fig = px.histogram(
+            display_df,
+            x='consistency_score',
+            nbins=20,
+            color='position',
+            marginal='box',
+            title="Distribution of Player Consistency Scores",
+            labels={'consistency_score': 'Consistency Score (0-100)'}
+        )
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True, key="consistency_dist")
+    
+    with tab3:
+        st.subheader("Detailed Consistency Metrics")
+        
+        display_cols = ['player_name', 'position', 'team', 'avg_points', 'std_points',
+                       'consistency_score', 'cv', 'performance_range', 'games']
+        
+        display_data = display_df[display_cols].copy()
+        display_data = display_data.sort_values('consistency_score', ascending=False)
+        
+        st.dataframe(
+            display_data,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
+def display_player_archetypes_analysis(df: pd.DataFrame):
+    """
+    Display identified player archetypes and performance profiles.
+    """
+    st.header("🎭 Player Archetypes & Profiles", divider="rainbow")
+    
+    if df.empty:
+        st.info("No data available for archetype analysis.")
+        return
+    
+    archetypes = get_player_archetypes(df)
+    
+    col1, col2, col3 = st.columns(3, gap="large")
+    
+    if 'High Performers' in archetypes and not archetypes['High Performers'].empty:
+        with col1:
+            st.subheader("🌟 High Performers")
+            high_perf = archetypes['High Performers'].copy()
+            st.dataframe(high_perf, use_container_width=True, hide_index=True)
+    
+    if 'Most Consistent' in archetypes and not archetypes['Most Consistent'].empty:
+        with col2:
+            st.subheader("🎯 Most Consistent")
+            consistent = archetypes['Most Consistent'].copy()
+            st.dataframe(consistent, use_container_width=True, hide_index=True)
+    
+    if 'Bonus Hunters' in archetypes and not archetypes['Bonus Hunters'].empty:
+        with col3:
+            st.subheader("💎 Bonus Hunters")
+            bonus = archetypes['Bonus Hunters'].copy()
+            st.dataframe(bonus, use_container_width=True, hide_index=True)
