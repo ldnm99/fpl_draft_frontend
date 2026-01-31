@@ -19,7 +19,7 @@ from core.visuals_utils import (
     display_overview,
     display_performance_trend,
     display_latest_gw,
-    display_top_performers,
+    display_optimized_lineup,
     display_player_progression,
     display_other_stats
 )
@@ -56,12 +56,14 @@ manager_points = display_performance_trend(manager_name, df)
 # ---------------- CURRENT GAMEWEEK ----------------
 display_latest_gw(manager_df)
 
-# ---------------- TOP PERFORMERS ----------------
-top_performances = display_top_performers(manager_df)
+# ---------------- OPTIMIZED LINEUP ----------------
+display_optimized_lineup(manager_df)
 
 # ---------------- PLAYER PROGRESSION ----------------
 display_player_progression(manager_df)
 
 # ---------------- OTHER STATS ----------------
+top_performances = pd.DataFrame()  # Kept for compatibility, not used
 display_other_stats(manager_points, top_performances)
+
 

@@ -338,3 +338,150 @@ def get_player_progression(manager_df: pd.DataFrame) -> pd.DataFrame:
         .pivot(index="full_name", columns="gw", values="gw_points")
         .fill_value(0)
     )
+
+
+# ============================================================
+#           OPTIMIZED LINEUP CALCULATION
+# ============================================================
+def get_optimal_lineup(manager_df: pd.DataFrame, gameweek: int = None) -> dict:
+    """
+    Calculate the optimal starting lineup for maximum points.
+    
+    Constraints:
+    - 11 starting players maximum
+    - Exactly 1 goalkeeper
+    - 3-5 defenders
+    - 3-5 midfielders
+    - 1-3 forwards
+    
+    Returns a dict with optimal lineup info.
+    """
+    if manager_df.empty:
+        return {
+            "optimal_points": 0,
+            "lineup": pd.DataFrame(),
+            "bench": pd.DataFrame(),
+            "valid": False,
+            "errors": ["No data available"]
+        }
+    
+    # Filter to specific gameweek if provided
+    if gameweek is not None:
+        gw_df = manager_df[manager_df["gw"] == gameweek].copy()
+    else:
+        # Use latest gameweek
+        gw_df = manager_df[manager_df["gw"] == manager_df["gw"].max()].copy()
+    
+    if gw_df.empty:
+        return {
+            "optimal_points": 0,
+            "lineup": pd.DataFrame(),
+            "bench": pd.DataFrame(),
+            "valid": False,
+            "errors": ["No data for this gameweek"]
+        }
+    
+    # Group by player to get latest entry (in case of duplicates)
+    gw_df = gw_df.sort_values("gw_points", ascending=False).drop_duplicates(subset=["full_name"])
+    
+    # Get position counts
+    positions = gw_df["position"].unique()
+    
+    # Separate players by position
+    gks = gw_df[gw_df["position"] == "GK"].sort_values("gw_points", ascending=False)
+    defs = gw_df[gw_df["position"] == "DEF"].sort_values("gw_points", ascending=False)
+    mids = gw_df[gw_df["position"] == "MID"].sort_values("gw_points", ascending=False)
+    fwds = gw_df[gw_df["position"] == "FWD"].sort_values("gw_points", ascending=False)
+    
+    errors = []
+    
+    # Validate minimum positions available
+    if len(gks) < 1:
+        errors.append("Not enough goalkeepers")
+    if len(defs) < 3:
+        errors.append("Not enough defenders")
+    if len(mids) < 3:
+        errors.append("Not enough midfielders")
+    if len(fwds) < 1:
+        errors.append("Not enough forwards")
+    
+    if errors:
+        return {
+            "optimal_points": 0,
+            "lineup": pd.DataFrame(),
+            "bench": pd.DataFrame(),
+            "valid": False,
+            "errors": errors
+        }
+    
+    # Start with mandatory selections (top player from each position)
+    selected = []
+    selected.extend(gks.head(1).index.tolist())  # 1 GK
+    
+    # For DEF, MID, FWD - try to maximize points while respecting constraints
+    # Start with greedy approach: select highest points that fits constraints
+    selected.extend(defs.head(3).index.tolist())  # 3 DEF
+    selected.extend(mids.head(3).index.tolist())  # 3 MID
+    selected.extend(fwds.head(1).index.tolist())  # 1 FWD
+    
+    # Now we have 8 players, need 3 more from remaining
+    remaining_players = gw_df.loc[~gw_df.index.isin(selected)].copy()
+    remaining_players = remaining_players.sort_values("gw_points", ascending=False)
+    
+    # Add top 3 remaining to reach 11
+    if len(remaining_players) >= 3:
+        selected.extend(remaining_players.head(3).index.tolist())
+    else:
+        selected.extend(remaining_players.index.tolist())
+    
+    # Verify we have exactly 11 or handle gracefully
+    if len(selected) < 11 and len(gw_df) < 11:
+        # Not enough players available
+        errors.append("Not enough players for a full 11-player lineup")
+    
+    # Get lineup and bench
+    optimal_lineup = gw_df.loc[selected].copy() if selected else gw_df.head(0)
+    bench = gw_df.loc[~gw_df.index.isin(selected)].copy()
+    
+    # Calculate optimal points (only from starting lineup)
+    optimal_points = optimal_lineup["gw_points"].sum()
+    
+    return {
+        "optimal_points": optimal_points,
+        "lineup": optimal_lineup,
+        "bench": bench,
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "gameweek": gameweek
+    }
+
+
+def get_all_optimal_lineups(manager_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Get optimal lineups for all gameweeks for a manager.
+    
+    Returns a dataframe with: gameweek, actual_points, optimal_points, difference, potential_gain
+    """
+    if manager_df.empty:
+        return pd.DataFrame(columns=["gameweek", "actual_points", "optimal_points", "difference"])
+    
+    results = []
+    
+    for gw in sorted(manager_df["gw"].unique()):
+        # Get actual points (only starting XI)
+        gw_data = manager_df[manager_df["gw"] == gw]
+        actual_points = gw_data[gw_data["team_position"] <= 11]["gw_points"].sum()
+        
+        # Get optimal points
+        optimal_result = get_optimal_lineup(manager_df, gameweek=gw)
+        optimal_points = optimal_result["optimal_points"]
+        
+        results.append({
+            "gameweek": gw,
+            "actual_points": actual_points,
+            "optimal_points": optimal_points,
+            "difference": optimal_points - actual_points,
+            "potential_gain_pct": (optimal_points - actual_points) / actual_points * 100 if actual_points > 0 else 0
+        })
+    
+    return pd.DataFrame(results)

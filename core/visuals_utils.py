@@ -8,7 +8,9 @@ from core.data_utils import (
     get_teams_avg_points,
     points_per_player_position,
     get_top_performers,
-    get_player_progression
+    get_player_progression,
+    get_optimal_lineup,
+    get_all_optimal_lineups
 )
 
 # ============================================================
@@ -357,6 +359,7 @@ def display_latest_gw(manager_df: pd.DataFrame):
         with col_list:
             st.subheader("Squad Lineup")
             display_df = latest_gw_df[['Position', 'Player', 'Team', 'Role', 'Points', 'Bonus']].copy()
+            display_df['Status'] = display_df['Position'].apply(lambda x: '✅ Starting' if x <= 11 else '🔄 Bench')
             display_df = display_df.sort_values('Points', ascending=False)
             
             st.dataframe(
@@ -369,18 +372,23 @@ def display_latest_gw(manager_df: pd.DataFrame):
         with col_visual:
             st.subheader("Points Breakdown")
             role_points = latest_gw_df.groupby('Role')['Points'].sum().reset_index()
-            fig = px.bar(
+            
+            # Create pie chart with percentage labels
+            fig = px.pie(
                 role_points,
-                x='Role',
-                y='Points',
-                color='Points',
-                color_continuous_scale='Viridis',
-                text='Points',
-                title="Points by Position"
+                names='Role',
+                values='Points',
+                title="Points Distribution by Position",
+                color_discrete_sequence=px.colors.qualitative.Set3,
+                hole=0.3
             )
-            fig.update_traces(textposition='outside')
-            fig.update_layout(height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True, key="gw_position_bar")
+            fig.update_traces(
+                textposition='inside',
+                textinfo='label+percent+value',
+                hovertemplate='<b>%{label}</b><br>Points: %{value}<br>Percentage: %{percent}<extra></extra>'
+            )
+            fig.update_layout(height=400, showlegend=True)
+            st.plotly_chart(fig, use_container_width=True, key="gw_position_pie")
     
     with tab2:
         col_top_list, col_top_visual = st.columns([1, 1], gap="large")
@@ -676,3 +684,202 @@ def display_other_stats(manager_points: pd.DataFrame, top_performances: pd.DataF
                 yaxis={'categoryorder': 'total ascending'}
             )
             st.plotly_chart(fig, use_container_width=True, key="top_10_chart")
+
+
+# ============================================================
+#          OPTIMIZED LINEUP SECTION (NEW)
+# ============================================================
+
+def display_optimized_lineup(manager_df: pd.DataFrame):
+    """
+    Display optimized team for each gameweek showing highest possible points
+    based on squad and constraints.
+    """
+    st.header("🎯 Optimized Team Strategy", divider="rainbow")
+    
+    if manager_df.empty:
+        st.info("No data available for optimization.")
+        return
+    
+    # Get all optimal lineups
+    optimal_df = get_all_optimal_lineups(manager_df)
+    
+    if optimal_df.empty:
+        st.info("Unable to calculate optimal lineups.")
+        return
+    
+    # --- Statistics Row ---
+    col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
+    
+    total_actual = optimal_df['actual_points'].sum()
+    total_optimal = optimal_df['optimal_points'].sum()
+    total_potential = total_optimal - total_actual
+    avg_gain_pct = optimal_df['potential_gain_pct'].mean()
+    
+    col_stat1.metric("📊 Total Actual Points", f"{total_actual:.0f}")
+    col_stat2.metric("🚀 Total Optimal Points", f"{total_optimal:.0f}")
+    col_stat3.metric("💡 Total Potential Gain", f"{total_potential:.0f}")
+    col_stat4.metric("📈 Avg Gain %", f"{avg_gain_pct:.1f}%")
+    
+    st.markdown("---")
+    
+    # --- Gameweek Selection ---
+    selected_gw = st.slider(
+        "Select Gameweek to View Optimal Lineup",
+        min_value=int(optimal_df['gameweek'].min()),
+        max_value=int(optimal_df['gameweek'].max()),
+        value=int(optimal_df['gameweek'].max())
+    )
+    
+    st.markdown("---")
+    
+    # --- Tab for comparison and details ---
+    tab1, tab2, tab3 = st.tabs(["📊 Comparison", "⭐ Optimal Lineup", "📋 All Gameweeks"])
+    
+    with tab1:
+        # Comparison chart
+        col_chart1, col_chart2 = st.columns([1, 1], gap="large")
+        
+        with col_chart1:
+            st.subheader("Actual vs Optimal Points")
+            comparison_df = optimal_df.copy()
+            comparison_df['gameweek'] = comparison_df['gameweek'].astype(int)
+            
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=comparison_df['gameweek'],
+                y=comparison_df['actual_points'],
+                name='Actual Points',
+                marker_color='#3498db'
+            ))
+            fig.add_trace(go.Bar(
+                x=comparison_df['gameweek'],
+                y=comparison_df['optimal_points'],
+                name='Optimal Points',
+                marker_color='#2ecc71'
+            ))
+            fig.update_layout(
+                barmode='group',
+                title="Actual vs Optimal Points by Gameweek",
+                xaxis_title="Gameweek",
+                yaxis_title="Points",
+                height=400,
+                hovermode='x unified'
+            )
+            st.plotly_chart(fig, use_container_width=True, key="actual_vs_optimal")
+        
+        with col_chart2:
+            st.subheader("Potential Gain Analysis")
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=comparison_df['gameweek'],
+                y=comparison_df['difference'],
+                mode='lines+markers',
+                name='Potential Gain',
+                line=dict(color='#e74c3c', width=3),
+                marker=dict(size=8),
+                fill='tozeroy'
+            ))
+            fig.update_layout(
+                title="Potential Gain Points per Gameweek",
+                xaxis_title="Gameweek",
+                yaxis_title="Potential Gain",
+                height=400,
+                hovermode='x unified'
+            )
+            st.plotly_chart(fig, use_container_width=True, key="potential_gain")
+    
+    with tab2:
+        st.subheader(f"Optimal Lineup - Gameweek {selected_gw}")
+        
+        # Get optimal lineup for selected GW
+        optimal_result = get_optimal_lineup(manager_df, gameweek=selected_gw)
+        
+        if not optimal_result['valid']:
+            st.warning(f"⚠️ Could not create valid lineup: {', '.join(optimal_result['errors'])}")
+            return
+        
+        lineup_df = optimal_result['lineup'].copy()
+        bench_df = optimal_result['bench'].copy()
+        
+        if not lineup_df.empty:
+            # Format lineup display
+            lineup_display = lineup_df[[
+                'full_name', 'real_team', 'position', 'gw_points', 'team_position'
+            ]].copy()
+            lineup_display.columns = ['Player', 'Team', 'Position', 'Points', 'Squad Pos']
+            lineup_display = lineup_display.sort_values('Points', ascending=False)
+            lineup_display['Squad Pos'] = lineup_display['Squad Pos'].apply(
+                lambda x: f"#{x} Starting" if x <= 11 else f"#{x} Bench"
+            )
+            
+            col_lineup, col_breakdown = st.columns([2, 1], gap="large")
+            
+            with col_lineup:
+                st.dataframe(
+                    lineup_display,
+                    use_container_width=True,
+                    hide_index=True
+                )
+            
+            with col_breakdown:
+                # Position breakdown
+                pos_breakdown = lineup_df['position'].value_counts().reset_index()
+                pos_breakdown.columns = ['Position', 'Count']
+                
+                fig = px.pie(
+                    pos_breakdown,
+                    names='Position',
+                    values='Count',
+                    title="Optimal Squad Composition",
+                    color_discrete_sequence=px.colors.qualitative.Set2,
+                    hole=0.3
+                )
+                fig.update_layout(height=300)
+                st.plotly_chart(fig, use_container_width=True, key="optimal_composition")
+            
+            # Summary
+            st.markdown("---")
+            col_sum1, col_sum2, col_sum3 = st.columns(3)
+            
+            actual_gw = optimal_df[optimal_df['gameweek'] == selected_gw]
+            if not actual_gw.empty:
+                actual_pts = actual_gw['actual_points'].values[0]
+                optimal_pts = actual_gw['optimal_points'].values[0]
+                gain = actual_gw['difference'].values[0]
+                
+                col_sum1.metric("Your Actual Points", f"{actual_pts:.0f}")
+                col_sum2.metric("Optimal Points", f"{optimal_pts:.0f}")
+                col_sum3.metric("Potential Gain", f"{gain:.0f}")
+    
+    with tab3:
+        st.subheader("All Gameweeks Summary")
+        display_table = optimal_df.copy()
+        display_table['gameweek'] = display_table['gameweek'].astype(int)
+        display_table['actual_points'] = display_table['actual_points'].round(0).astype(int)
+        display_table['optimal_points'] = display_table['optimal_points'].round(0).astype(int)
+        display_table['difference'] = display_table['difference'].round(0).astype(int)
+        display_table['potential_gain_pct'] = display_table['potential_gain_pct'].round(1)
+        
+        display_table = display_table.rename(columns={
+            'gameweek': 'GW',
+            'actual_points': 'Actual',
+            'optimal_points': 'Optimal',
+            'difference': 'Gain',
+            'potential_gain_pct': 'Gain %'
+        })
+        
+        st.dataframe(
+            display_table[['GW', 'Actual', 'Optimal', 'Gain', 'Gain %']],
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        # Download as CSV
+        csv = display_table.to_csv(index=False)
+        st.download_button(
+            label="📥 Download as CSV",
+            data=csv,
+            file_name=f"optimized_lineup_{selected_gw}.csv",
+            mime="text/csv"
+        )

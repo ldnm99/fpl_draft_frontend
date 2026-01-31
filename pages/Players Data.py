@@ -19,7 +19,6 @@ from core.visuals_utils import (
     display_overview,
     display_performance_trend,
     display_latest_gw,
-    display_top_performers,
     display_player_progression,
     display_other_stats
 )
