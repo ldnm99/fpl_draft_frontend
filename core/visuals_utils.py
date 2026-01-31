@@ -905,8 +905,15 @@ def display_player_clustering(df: pd.DataFrame):
         st.info("No data available for clustering analysis.")
         return
     
+    # Filter out rows with missing critical data
+    df_clean = df.dropna(subset=['full_name', 'position', 'gw_points']).copy()
+    
+    if df_clean.empty or len(df_clean) < 10:
+        st.warning("⚠️ Insufficient player data for clustering analysis. Need at least 10 players with complete data.")
+        return
+    
     # Get unique positions
-    positions = sorted(df['position'].unique())
+    positions = sorted(df_clean['position'].unique())
     
     col_select, col_info = st.columns([2, 1])
     
@@ -923,7 +930,11 @@ def display_player_clustering(df: pd.DataFrame):
     st.markdown("---")
     
     # Prepare data
-    analysis_df = df if selected_position == "All Positions" else df[df['position'] == selected_position]
+    analysis_df = df_clean if selected_position == "All Positions" else df_clean[df_clean['position'] == selected_position]
+    
+    if len(analysis_df) < n_clusters:
+        st.warning(f"⚠️ Not enough players ({len(analysis_df)}) for {n_clusters} clusters. Please reduce cluster count or select 'All Positions'.")
+        return
     
     # Run clustering
     clustering_result = cluster_players(analysis_df, n_clusters=n_clusters, 
@@ -1058,8 +1069,19 @@ def display_player_trends(df: pd.DataFrame):
         st.info("No data available for trend analysis.")
         return
     
+    # Filter out rows with missing critical data
+    df_clean = df.dropna(subset=['full_name', 'gw_points', 'gw']).copy()
+    
+    if df_clean.empty:
+        st.warning("⚠️ No valid player data available for trend analysis.")
+        return
+    
     # Player selection
-    players = sorted(df['full_name'].unique())
+    players = sorted(df_clean['full_name'].unique())
+    
+    if not players:
+        st.warning("⚠️ No players available for trend analysis.")
+        return
     
     col_select, col_filter = st.columns([2, 1])
     
@@ -1076,7 +1098,7 @@ def display_player_trends(df: pd.DataFrame):
     st.markdown("---")
     
     # Analyze trend
-    trend_result = analyze_player_trend(df, selected_player)
+    trend_result = analyze_player_trend(df_clean, selected_player)
     
     if 'error' in trend_result:
         st.warning(f"⚠️ {trend_result['error']}")
@@ -1191,6 +1213,10 @@ def display_consistency_analysis(df: pd.DataFrame):
         display_df = consistency_df[consistency_df['position'] == selected_position].copy()
     else:
         display_df = consistency_df.copy()
+    
+    if display_df.empty:
+        st.warning("⚠️ No data available for the selected position.")
+        return
     
     st.markdown("---")
     

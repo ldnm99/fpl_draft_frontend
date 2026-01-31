@@ -40,7 +40,14 @@ BUCKET = "data"  # your Supabase Storage bucket
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
 
-players = pd.read_csv("Data/players_data.csv")
+# Try to load players data from CSV, fallback to empty dataframe
+players = pd.DataFrame()
+try:
+    players = pd.read_csv("Data/players_data.csv")
+except FileNotFoundError:
+    st.warning("⚠️ Players data file not found. Using gameweek data only.")
+except Exception as e:
+    st.warning(f"⚠️ Could not load players file: {str(e)}")
 
 
 # ======================= PAGE TITLE =======================
@@ -65,18 +72,21 @@ with tab1:
     with col1:
         st.subheader("All Players (Season Summary)")
         
-        # Player selection
-        selected_player = st.selectbox("Select Player", options=[""] + sorted(players['name'].unique().tolist()))
-        
-        if selected_player:
-            filtered_players = players[players['name'] == selected_player]
+        if not players.empty:
+            # Player selection
+            selected_player = st.selectbox("Select Player", options=[""] + sorted(players['name'].unique().tolist()))
+            
+            if selected_player:
+                filtered_players = players[players['name'] == selected_player]
+            else:
+                filtered_players = players.copy()
+            
+            filtered_players = filtered_players[['name','team','Total points','position','Goals Scored','Assists','CS','xG','starts','yellow_cards','red_cards','news']]
+            filtered_players.rename(columns={'name': 'Name', 'team': 'Team', 'Total points': 'Total Points', 'position': 'Position', 'Goals Scored': 'Goals Scored', 'Assists': 'Assists', 'CS': 'Clean Sheets', 'xG': 'xG', 'starts': 'Starts', 'yellow_cards': 'Yellow Cards', 'red_cards': 'Red Cards', 'news': 'News'}, inplace=True)
+            
+            st.dataframe(filtered_players, use_container_width=True)
         else:
-            filtered_players = players.copy()
-        
-        filtered_players = filtered_players[['name','team','Total points','position','Goals Scored','Assists','CS','xG','starts','yellow_cards','red_cards','news']]
-        filtered_players.rename(columns={'name': 'Name', 'team': 'Team', 'Total points': 'Total Points', 'position': 'Position', 'Goals Scored': 'Goals Scored', 'Assists': 'Assists', 'CS': 'Clean Sheets', 'xG': 'xG', 'starts': 'Starts', 'yellow_cards': 'Yellow Cards', 'red_cards': 'Red Cards', 'news': 'News'}, inplace=True)
-        
-        st.dataframe(filtered_players, use_container_width=True)
+            st.info("📊 Players data not available. See Gameweek Performance Data on the right.")
     
     with col2:
         st.subheader("Gameweek Performance Data")
