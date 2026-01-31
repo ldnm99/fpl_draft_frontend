@@ -8,6 +8,7 @@ from core.data_utils import (
     calculate_team_gw_points, 
     get_teams_avg_points
 )
+from core.visuals_utils import display_league_optimized_lineups
 from supabase import create_client
 from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
 
@@ -132,7 +133,7 @@ st.markdown("---")
 #                    TABBED INTERFACE
 # ============================================================
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Team Performance", "🔥 Rankings & Averages", "📈 Trends", "🎯 Advanced Analysis"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Team Performance", "🔥 Rankings & Averages", "📈 Trends", "🎯 Advanced Analysis", "🏆 Optimized League"])
 
 # ============================================================
 #                    TAB 1: TEAM PERFORMANCE
@@ -379,6 +380,13 @@ with tab4:
     else:
         st.info("No data available for analysis.")
 
+# ============================================================
+#                    TAB 5: OPTIMIZED LEAGUE
+# ============================================================
+
+with tab5:
+    display_league_optimized_lineups(df)
+
 st.markdown("---")
 
 # ============================================================
@@ -396,6 +404,7 @@ with st.expander("📋 About This Dashboard", expanded=False):
     - 🏆 **Rankings**: View teams ranked by average points per gameweek
     - 📈 **Trends**: Track performance trends across the season
     - 🎯 **Advanced Analytics**: Heatmaps and consistency analysis
+    - 🏆 **Optimized League**: See league-wide optimal vs actual lineup performance
     
     **Filtering Options:**
     - Gameweek Range: Select specific gameweeks to analyze

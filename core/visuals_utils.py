@@ -12,6 +12,7 @@ from core.data_utils import (
     get_player_progression,
     get_optimal_lineup,
     get_all_optimal_lineups,
+    get_league_optimized_lineups,
     cluster_players,
     analyze_player_trend,
     calculate_player_consistency,
@@ -1330,3 +1331,138 @@ def display_player_archetypes_analysis(df: pd.DataFrame):
             st.subheader("💎 Bonus Hunters")
             bonus = archetypes['Bonus Hunters'].copy()
             st.dataframe(bonus, use_container_width=True, hide_index=True)
+
+
+# ============================================================
+#       LEAGUE-WIDE OPTIMIZED LINEUPS DISPLAY
+# ============================================================
+
+def display_league_optimized_lineups(df: pd.DataFrame):
+    """
+    Display league-wide optimized lineup comparison.
+    Shows all teams with their actual vs potential optimal points.
+    """
+    st.header("🏆 Optimized League Classification", divider="rainbow")
+    
+    if df.empty:
+        st.info("No data available for league analysis.")
+        return
+    
+    # Calculate league-wide optimizations
+    league_optim = get_league_optimized_lineups(df)
+    
+    if league_optim.empty:
+        st.warning("⚠️ Unable to calculate optimized lineups for league.")
+        return
+    
+    # --- KPI Cards ---
+    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+    
+    total_actual = league_optim['actual_points'].sum()
+    total_optimal = league_optim['optimal_points'].sum()
+    total_potential = total_optimal - total_actual
+    
+    col_kpi1.metric("📊 League Total (Actual)", f"{total_actual:,.0f}")
+    col_kpi2.metric("🚀 League Total (Optimal)", f"{total_optimal:,.0f}")
+    col_kpi3.metric("💡 League Potential Gain", f"{total_potential:,.0f}")
+    
+    st.markdown("---")
+    
+    # --- Main Display ---
+    col_table, col_chart = st.columns([2, 1], gap="large")
+    
+    with col_table:
+        st.subheader("Classification Table")
+        
+        # Prepare display table
+        display_table = league_optim.copy()
+        display_table['Rank'] = range(1, len(display_table) + 1)
+        
+        # Reorder columns
+        display_table = display_table[['Rank', 'manager_team_name', 'actual_points', 'optimal_points', 
+                                       'difference', 'potential_gain_pct']]
+        
+        # Rename for display
+        display_table.rename(columns={
+            'manager_team_name': 'Team Name',
+            'actual_points': 'Actual Points',
+            'optimal_points': 'Optimal Points',
+            'difference': 'Potential Gain',
+            'potential_gain_pct': 'Gain %'
+        }, inplace=True)
+        
+        # Color rows based on potential gain
+        def highlight_gain(row):
+            gain_pct = row['Gain %']
+            if gain_pct > 20:
+                return ['background-color: #ffcccc'] * len(row)
+            elif gain_pct > 10:
+                return ['background-color: #ffe6cc'] * len(row)
+            else:
+                return ['background-color: #ccffcc'] * len(row)
+        
+        st.dataframe(
+            display_table,
+            use_container_width=True,
+            hide_index=True,
+            height=600
+        )
+    
+    with col_chart:
+        st.subheader("Potential Gain Distribution")
+        
+        # Create visualization
+        fig = px.bar(
+            league_optim.sort_values('potential_gain_pct', ascending=False),
+            y='manager_team_name',
+            x='potential_gain_pct',
+            color='potential_gain_pct',
+            color_continuous_scale='RdYlGn_r',
+            orientation='h',
+            text='potential_gain_pct',
+            title="Potential Gain % by Team"
+        )
+        fig.update_traces(texttemplate='%{value:.1f}%', textposition='outside')
+        fig.update_layout(
+            showlegend=False,
+            height=600,
+            yaxis={'categoryorder': 'total ascending'}
+        )
+        st.plotly_chart(fig, use_container_width=True, key="league_gains")
+    
+    st.markdown("---")
+    
+    # --- Comparison Visualization ---
+    st.subheader("Actual vs Optimal Points Comparison")
+    
+    comparison_fig = go.Figure()
+    
+    # Sort by actual points for x-axis
+    sorted_league = league_optim.sort_values('actual_points', ascending=True)
+    
+    comparison_fig.add_trace(go.Bar(
+        y=sorted_league['manager_team_name'],
+        x=sorted_league['actual_points'],
+        name='Actual Points',
+        marker_color='#3498db',
+        orientation='h'
+    ))
+    
+    comparison_fig.add_trace(go.Bar(
+        y=sorted_league['manager_team_name'],
+        x=sorted_league['optimal_points'],
+        name='Optimal Points',
+        marker_color='#2ecc71',
+        orientation='h'
+    ))
+    
+    comparison_fig.update_layout(
+        barmode='group',
+        title="Actual vs Optimal Points - All Teams",
+        xaxis_title="Points",
+        yaxis_title="Team",
+        height=500,
+        hovermode='y unified'
+    )
+    
+    st.plotly_chart(comparison_fig, use_container_width=True, key="league_comparison")

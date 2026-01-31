@@ -487,9 +487,72 @@ def get_all_optimal_lineups(manager_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
-# ============================================================
-#      DATA SCIENCE ANALYSIS - PLAYER CLUSTERING & TRENDS
-# ============================================================
+def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate optimized lineups for all teams in the league.
+    
+    Returns a DataFrame with:
+    - manager_team_name: Team name
+    - actual_points: Total actual points
+    - optimal_points: Total optimal points if best lineup was picked
+    - difference: Potential gain
+    - potential_gain_pct: Percentage gain
+    """
+    if df.empty:
+        return pd.DataFrame()
+    
+    teams = df['manager_team_name'].dropna().unique()
+    results = []
+    
+    for team in teams:
+        team_df = df[df['manager_team_name'] == team]
+        
+        # Get actual total points (only starting XI)
+        actual_total = team_df[team_df['team_position'] <= 11]['gw_points'].sum()
+        
+        # Calculate optimal points
+        optimal_result = get_optimal_lineup(team_df)
+        optimal_total = optimal_result['optimal_points']
+        
+        # Get all gameweeks for this team to sum up optimal points across season
+        for gw in sorted(team_df['gw'].unique()):
+            gw_data = team_df[team_df['gw'] == gw]
+            gw_optimal = get_optimal_lineup(team_df, gameweek=gw)
+            
+            if not results or results[-1]['manager_team_name'] != team:
+                results.append({
+                    'manager_team_name': team,
+                    'actual_points': 0,
+                    'optimal_points': 0
+                })
+        
+        # Recalculate properly - sum actual and optimal across all gameweeks
+        actual_total = 0
+        optimal_total = 0
+        
+        for gw in sorted(team_df['gw'].unique()):
+            gw_data = team_df[team_df['gw'] == gw]
+            
+            # Actual points (starting XI only)
+            gw_actual = gw_data[gw_data['team_position'] <= 11]['gw_points'].sum()
+            actual_total += gw_actual
+            
+            # Optimal points
+            gw_optimal = get_optimal_lineup(team_df, gameweek=gw)
+            optimal_total += gw_optimal['optimal_points']
+        
+        results.append({
+            'manager_team_name': team,
+            'actual_points': int(actual_total),
+            'optimal_points': int(optimal_total),
+            'difference': int(optimal_total - actual_total),
+            'potential_gain_pct': round((optimal_total - actual_total) / actual_total * 100, 1) if actual_total > 0 else 0
+        })
+    
+    result_df = pd.DataFrame(results)
+    
+    # Sort by actual points (descending)
+    return result_df.sort_values('actual_points', ascending=False).reset_index(drop=True)
 
 def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -707,11 +770,15 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate consistency metrics for all players.
     
+    Filters out players with insufficient playing time/points to avoid 
+    selecting "consistent" players who simply haven't played.
+    
     Returns DataFrame with:
     - player_name, position, team
-    - avg_points, std_points, min_points, max_points
+    - avg_points, std_points, min_points, max_points, total_minutes
     - coefficient_of_variation (consistency metric)
     - consistency_score (0-100, higher = more consistent)
+    - playing_time_score (factor in consistency)
     """
     if df.empty:
         return pd.DataFrame()
@@ -721,16 +788,47 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     
     try:
-        consistency_data = df.groupby(['full_name', 'position']).agg({
-            'gw_points': ['mean', 'std', 'min', 'max', 'count'],
+        # Include gw_minutes if available
+        agg_dict = {
+            'gw_points': ['mean', 'std', 'min', 'max', 'count', 'sum'],
             'real_team': 'first',
             'gw_bonus': 'sum'
-        }).reset_index()
+        }
         
-        consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
-                                    'min_points', 'max_points', 'games', 'team', 'total_bonus']
+        # Add minutes if available
+        if 'gw_minutes' in df.columns:
+            agg_dict['gw_minutes'] = 'sum'
+        
+        consistency_data = df.groupby(['full_name', 'position']).agg(agg_dict).reset_index()
+        
+        # Build column names dynamically
+        if 'gw_minutes' in df.columns:
+            consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
+                                        'min_points', 'max_points', 'games', 'total_points', 'team', 'total_bonus', 'total_minutes']
+        else:
+            consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
+                                        'min_points', 'max_points', 'games', 'total_points', 'team', 'total_bonus']
+            consistency_data['total_minutes'] = 0
     except Exception as e:
         logger.error(f"Error in consistency calculation: {str(e)}")
+        return pd.DataFrame()
+    
+    # Filter out players with insufficient activity
+    # Minimum requirements:
+    # - At least 3 games played
+    # - At least 5 total points across season
+    # - At least 90 minutes total (roughly 1 full game)
+    min_games = 3
+    min_total_points = 5
+    min_total_minutes = 90
+    
+    consistency_data = consistency_data[
+        (consistency_data['games'] >= min_games) &
+        (consistency_data['total_points'] >= min_total_points) &
+        ((consistency_data['total_minutes'] >= min_total_minutes) | (consistency_data['total_minutes'] == 0))
+    ].copy()
+    
+    if consistency_data.empty:
         return pd.DataFrame()
     
     # Calculate coefficient of variation
@@ -739,10 +837,20 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
         axis=1
     )
     
+    # Calculate playing time score (0-1)
+    # Players with more minutes are rated higher for consistency
+    max_minutes = consistency_data['total_minutes'].max()
+    if max_minutes > 0:
+        consistency_data['playing_time_score'] = (consistency_data['total_minutes'] / max_minutes).clip(lower=0, upper=1)
+    else:
+        consistency_data['playing_time_score'] = 1.0
+    
     # Calculate consistency score (0-100, higher = better)
-    # Formula: 100 * (1 - cv), capped at 100
+    # Combine CV (consistency) with playing time
+    # Formula: (100 * (1 - cv)) * playing_time_score
+    # This penalizes players with low playing time while rewarding those who are both consistent AND play
     consistency_data['consistency_score'] = (
-        100 * (1 - consistency_data['cv']).clip(lower=0, upper=1)
+        100 * (1 - consistency_data['cv']).clip(lower=0, upper=1) * consistency_data['playing_time_score']
     )
     
     # Performance stability (max-min relative to mean)
@@ -784,3 +892,65 @@ def get_player_archetypes(df: pd.DataFrame) -> dict:
     }
     
     return archetypes
+
+
+# ============================================================
+#           LEAGUE-WIDE OPTIMIZATION
+# ============================================================
+
+def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate optimized lineups for all teams in the league.
+    Returns league-wide summary with actual vs optimal points.
+    
+    Returns:
+        DataFrame with columns: manager_team_name, actual_points, optimal_points, 
+                               difference, potential_gain_pct
+    """
+    if df.empty:
+        return pd.DataFrame()
+    
+    try:
+        # Get unique teams
+        teams = df['manager_team_name'].unique()
+        
+        league_results = []
+        
+        for team in teams:
+            team_df = df[df['manager_team_name'] == team]
+            
+            if team_df.empty:
+                continue
+            
+            # Calculate actual points (sum of gw_points)
+            actual_points = team_df['gw_points'].sum()
+            
+            # Calculate optimal points using existing optimization function
+            optim_result = get_all_optimal_lineups(team_df)
+            
+            if isinstance(optim_result, dict) and 'total_optimal_points' in optim_result:
+                optimal_points = optim_result['total_optimal_points']
+            else:
+                # Fallback if optimization fails
+                optimal_points = actual_points
+            
+            potential_gain = optimal_points - actual_points
+            potential_gain_pct = ((potential_gain / actual_points) * 100) if actual_points > 0 else 0
+            
+            league_results.append({
+                'manager_team_name': team,
+                'actual_points': actual_points,
+                'optimal_points': optimal_points,
+                'difference': potential_gain,
+                'potential_gain_pct': potential_gain_pct
+            })
+        
+        # Create DataFrame and sort by actual points (descending)
+        result_df = pd.DataFrame(league_results)
+        result_df = result_df.sort_values('actual_points', ascending=False).reset_index(drop=True)
+        
+        return result_df
+        
+    except Exception as e:
+        logger.error(f"Error calculating league optimized lineups: {e}")
+        return pd.DataFrame()
