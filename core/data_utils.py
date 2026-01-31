@@ -507,14 +507,16 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     for team in teams:
         team_df = df[df['manager_team_name'] == team]
         
+        # Calculate actual points directly from starting XI
+        actual_total = team_df[team_df['team_position'] <= 11]['gw_points'].sum()
+        
         # Use get_all_optimal_lineups which correctly calculates gameweek-by-gameweek
         gw_results = get_all_optimal_lineups(team_df)
         
         if gw_results.empty:
             continue
         
-        # Sum actual and optimal across all gameweeks
-        actual_total = gw_results['actual_points'].sum()
+        # Sum optimal across all gameweeks (actual should match)
         optimal_total = gw_results['optimal_points'].sum()
         
         results.append({
