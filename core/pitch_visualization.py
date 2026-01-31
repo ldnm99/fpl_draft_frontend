@@ -49,7 +49,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
     st.header("⚽ Squad on the Pitch", divider="rainbow")
     
     if manager_df.empty:
-        st.info("No data available.")
+        st.error("ERROR: manager_df is empty")
         return
     
     try:
@@ -57,8 +57,10 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         latest_gw = manager_df['gw'].max()
         squad_df = manager_df[manager_df['gw'] == latest_gw].copy()
         
+        st.write(f"DEBUG: GW={latest_gw}, Squad size={len(squad_df)}")
+        
         if squad_df.empty:
-            st.info("No squad data for current gameweek.")
+            st.error("ERROR: No squad data for current gameweek.")
             return
         
         # Organize by position

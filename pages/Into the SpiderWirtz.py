@@ -47,6 +47,9 @@ st.title(f"📊 {manager_name} Dashboard")
 # ---------------- OVERVIEW ----------------
 display_overview(manager_name, manager_df)
 
+# ----------- SQUAD PITCH -----------
+display_squad_pitch(manager_df)
+
 # ---------------- TEAM PERFORMANCE TREND ----------------
 manager_points = display_performance_trend(manager_name, df)
 
@@ -58,6 +61,7 @@ display_optimized_lineup(manager_df)
 
 # ---------------- OTHER STATS ----------------
 display_other_stats(manager_points, pd.DataFrame())
+
 
 
 
