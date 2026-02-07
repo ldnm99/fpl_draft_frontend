@@ -28,45 +28,14 @@ def get_assets_path():
 
 
 def get_player_kit_image(team_name: str) -> Image.Image:
-    """Get the kit image for a player's team."""
+    """Get the kit image for a player's team using short_name."""
     try:
         assets_path = get_assets_path()
         players_path = os.path.join(assets_path, "players")
         
-        # Team name mapping for abbreviations
-        team_mapping = {
-            'ARS': 'Arsenal',
-            'AVL': 'Aston Villa',
-            'BOU': 'Bournemouth',
-            'BRE': 'Brentford',
-            'BHA': 'Brighton',
-            'BUR': 'Burnley',
-            'CHE': 'Chelsea',
-            'CRY': 'Crystal Palace',
-            'EVE': 'Everton',
-            'FUL': 'Fulham',
-            'LEE': 'Leeds United',
-            'LIV': 'Liverpool',
-            'MCI': 'Manchester City',
-            'MUN': 'Manchester United',
-            'NEW': 'Newcastle United',
-            'NFO': 'Nottingham Forest',
-            'SUN': 'Sunderland',
-            'TOT': 'Tottenham',
-            'WHU': 'West Ham',
-            'WOL': 'Wolverhampton'
-        }
-        
-        # Try direct match first
         kit_path = os.path.join(players_path, f"{team_name}.png")
         if os.path.exists(kit_path):
             return Image.open(kit_path).convert("RGBA")
-        
-        # Try mapped name if abbreviation
-        if team_name in team_mapping:
-            kit_path = os.path.join(players_path, f"{team_mapping[team_name]}.png")
-            if os.path.exists(kit_path):
-                return Image.open(kit_path).convert("RGBA")
         
         return None
     except Exception as e:
@@ -371,12 +340,11 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                     else:
                         points_class = "negative"
                     
-                    # Get kit image using club_name (full name) or short_name as fallback
-                    team_for_kit = player.get('club_name', player.get('short_name', ''))
-                    kit_base64 = get_kit_base64(team_for_kit)
+                    # Get kit image using short_name
+                    kit_base64 = get_kit_base64(player['short_name'])
                     
                     if kit_base64:
-                        shirt_html = f'<img src="data:image/png;base64,{kit_base64}" class="player-shirt" alt="{team_for_kit}">'
+                        shirt_html = f'<img src="data:image/png;base64,{kit_base64}" class="player-shirt" alt="{player["short_name"]}">'
                     else:
                         shirt_html = f'<div class="player-shirt" style="background: #667eea; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">⚽</div>'
                     
@@ -408,12 +376,11 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 points = player['gw_points']
                 points_class = "" if points > 0 else ("zero" if points == 0 else "negative")
                 
-                # Get kit image using club_name (full name) or short_name as fallback
-                team_for_kit = player.get('club_name', player.get('short_name', ''))
-                kit_base64 = get_kit_base64(team_for_kit)
+                # Get kit image using short_name
+                kit_base64 = get_kit_base64(player['short_name'])
                 
                 if kit_base64:
-                    shirt_html = f'<img src="data:image/png;base64,{kit_base64}" class="bench-shirt" alt="{team_for_kit}">'
+                    shirt_html = f'<img src="data:image/png;base64,{kit_base64}" class="bench-shirt" alt="{player["short_name"]}">'
                 else:
                     shirt_html = f'<div class="bench-shirt" style="background: #95a5a6; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">⚽</div>'
                 
