@@ -9,22 +9,38 @@ Completely redesigned the squad pitch visualization based on the official FPL we
 
 ## Key Improvements
 
-### 1. **FPL-Style Design**
+### 1. **Larger Player Cards** 🆕
+- **Kit images**: Increased from 50x66px to 70x92px (40% larger)
+- **Player names**: Increased from 11px to 13px font
+- **Points badges**: Increased from 12px to 15px font with more padding
+- **Bench kits**: Increased from 45x60px to 60x79px
+- Better visibility and readability on all devices
+
+### 2. **Fixture Display** 🆕
+- Shows opponent and home/away status below player name
+- Format: "WOL (A)" for away at Wolves, "ARS (H)" for home vs Arsenal
+- Styled with semi-transparent backdrop
+- Auto-detects from available data columns:
+  - `opponent_short_name`, `opponent`, `opp_team_short_name`
+  - `was_home`, `is_home`, `home_away`
+
+### 3. **FPL-Style Design**
 - Modern gradient backgrounds
 - Professional color scheme matching FPL
 - Smooth hover effects and transitions
 - Responsive layout
 
-### 2. **Dynamic Formation Detection**
+### 4. **Dynamic Formation Detection**
 - Automatically detects formation (4-4-2, 3-5-2, 4-3-3, etc.)
 - Displays formation badge
 - Supports 7 different formations:
   - 4-4-2, 3-5-2, 3-4-3, 4-3-3
   - 4-5-1, 5-4-1, 5-3-2
 
-### 3. **Enhanced Player Cards**
-- Larger, clearer kit images
+### 5. **Enhanced Player Cards**
+- Kit images using team `short_name` from assets/players/
 - Player surname display (shorter, cleaner)
+- Fixture information (opponent + H/A)
 - Color-coded points badges:
   - **Positive**: Gradient green/cyan
   - **Zero**: Gray gradient
@@ -32,21 +48,22 @@ Completely redesigned the squad pitch visualization based on the official FPL we
 - Drop shadows for depth
 - Hover animation (scale up)
 
-### 4. **Improved Pitch Layout**
+### 6. **Improved Pitch Layout**
 - Vertical pitch orientation (like FPL)
 - Better aspect ratio
 - Can use background image OR gradient fallback
 - Centered, containerized design
 - Maximum width for desktop viewing
 
-### 5. **Professional Bench Section**
+### 7. **Professional Bench Section**
 - Dark gradient background
 - Uppercase title with letter spacing
 - Flexbox layout (responsive)
 - Hover effects on bench players
 - Consistent styling with main pitch
+- Shows fixture info for bench players too
 
-### 6. **Smart Positioning**
+### 8. **Smart Positioning**
 Based on actual formation:
 - Players positioned according to tactical setup
 - Realistic spacing and arrangement

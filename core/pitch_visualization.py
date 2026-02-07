@@ -130,6 +130,43 @@ def detect_formation(starting_xi: pd.DataFrame) -> str:
     return formation
 
 
+def get_fixture_display(player_row: pd.Series) -> str:
+    """
+    Get fixture display string (e.g., 'WOL (A)' or 'ARS (H)').
+    Checks for opponent and home/away columns in the data.
+    """
+    # Check for various possible column names for opponent
+    opponent_col = None
+    for col in ['opponent_short_name', 'opponent', 'opp_team_short_name', 'opponent_team']:
+        if col in player_row.index and pd.notna(player_row.get(col)):
+            opponent_col = col
+            break
+    
+    # Check for home/away indicator
+    was_home_col = None
+    for col in ['was_home', 'is_home', 'home_away']:
+        if col in player_row.index:
+            was_home_col = col
+            break
+    
+    # Build fixture string
+    if opponent_col:
+        opponent = str(player_row[opponent_col])[:3].upper()  # Limit to 3 chars
+        
+        if was_home_col:
+            is_home = player_row[was_home_col]
+            if isinstance(is_home, str):
+                location = '(H)' if is_home.lower() in ['h', 'home'] else '(A)'
+            else:
+                location = '(H)' if is_home else '(A)'
+        else:
+            location = ''
+        
+        return f"{opponent} {location}".strip()
+    
+    return ""  # No fixture info available
+
+
 def display_squad_pitch(manager_df: pd.DataFrame):
     """Display squad on pitch with FPL-style design"""
     st.header("⚽ Squad on the Pitch", divider="rainbow")
@@ -211,36 +248,48 @@ def display_squad_pitch(manager_df: pd.DataFrame):
             }}
             
             .player-shirt {{
-                width: 50px;
-                height: 66px;
+                width: 70px;
+                height: 92px;
                 object-fit: contain;
-                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-                margin-bottom: 4px;
+                filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+                margin-bottom: 6px;
             }}
             
             .player-name {{
                 background: rgba(0, 0, 0, 0.85);
                 color: white;
-                padding: 4px 8px;
+                padding: 5px 10px;
                 border-radius: 4px;
-                font-size: 11px;
+                font-size: 13px;
                 font-weight: 600;
                 white-space: nowrap;
-                max-width: 80px;
+                max-width: 100px;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                margin: 0 auto 2px;
+                margin: 0 auto 3px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }}
+            
+            .player-fixture {{
+                background: rgba(255, 255, 255, 0.15);
+                color: #fff;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: 500;
+                margin: 0 auto 3px;
+                display: inline-block;
+                backdrop-filter: blur(5px);
             }}
             
             .player-points {{
                 background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
                 color: #000;
-                padding: 3px 10px;
-                border-radius: 12px;
-                font-size: 12px;
+                padding: 4px 12px;
+                border-radius: 14px;
+                font-size: 15px;
                 font-weight: 700;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
                 display: inline-block;
             }}
             
@@ -288,8 +337,8 @@ def display_squad_pitch(manager_df: pd.DataFrame):
             }}
             
             .bench-shirt {{
-                width: 45px;
-                height: 60px;
+                width: 60px;
+                height: 79px;
                 object-fit: contain;
                 filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
                 margin-bottom: 4px;
@@ -349,11 +398,16 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                         shirt_html = f'<div class="player-shirt" style="background: #667eea; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">⚽</div>'
                     
                     player_name = str(player['player_name']).split()[-1] if len(str(player['player_name']).split()) > 1 else str(player['player_name'])
+                    fixture_display = get_fixture_display(player)
+                    
+                    # Build fixture HTML if available
+                    fixture_html = f'<div class="player-fixture">{fixture_display}</div>' if fixture_display else ''
                     
                     html_content += f"""
                     <div class="player-element" style="left: {x_pct}%; top: {y_pct}%;">
                         {shirt_html}
                         <div class="player-name">{player_name[:12]}</div>
+                        {fixture_html}
                         <div class="player-points {points_class}">{int(points)}</div>
                     </div>
                     """
@@ -385,11 +439,14 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                     shirt_html = f'<div class="bench-shirt" style="background: #95a5a6; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">⚽</div>'
                 
                 player_name = str(player['player_name']).split()[-1] if len(str(player['player_name']).split()) > 1 else str(player['player_name'])
+                fixture_display = get_fixture_display(player)
+                fixture_html = f'<div class="player-fixture">{fixture_display}</div>' if fixture_display else ''
                 
                 html_content += f"""
                 <div class="bench-player">
                     {shirt_html}
                     <div class="player-name">{player_name[:10]}</div>
+                    {fixture_html}
                     <div class="player-points {points_class}">{int(points)}</div>
                 </div>
                 """
