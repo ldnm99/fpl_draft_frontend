@@ -150,7 +150,7 @@ def display_overview(manager_name: str, manager_df: pd.DataFrame):
             st.subheader("Position Breakdown")
             fig = px.pie(
                 pos_df,
-                names='position',
+                names='player_position',
                 values='gw_points',
                 title="Points Distribution by Position",
                 color_discrete_sequence=px.colors.qualitative.Set3,
@@ -990,7 +990,7 @@ def display_player_clustering(df: pd.DataFrame):
             y='consistency_norm',
             color='cluster',
             size='games_played',
-            hover_data=['player_name', 'position', 'avg_points', 'consistency'],
+            hover_data=['player_name', 'player_position', 'avg_points', 'consistency'],
             labels={
                 'avg_points_norm': 'Average Points (Normalized)',
                 'consistency_norm': 'Consistency (Normalized)',
@@ -1010,7 +1010,7 @@ def display_player_clustering(df: pd.DataFrame):
             cluster_players_df = cluster_players_df.sort_values('avg_points', ascending=False)
             
             with st.expander(f"🔹 Cluster {cluster_id} ({len(cluster_players_df)} players)", expanded=(cluster_id == 0)):
-                display_cols = ['player_name', 'position', 'team', 'avg_points', 
+                display_cols = ['player_name', 'player_position', 'team', 'avg_points', 
                                'std_points', 'games_played', 'consistency']
                 
                 col_table, col_stats = st.columns([2, 1])
@@ -1238,7 +1238,7 @@ def display_consistency_analysis(df: pd.DataFrame):
         with col_most:
             st.write("**Most Consistent Players**")
             top_consistent = display_df.nlargest(10, 'consistency_score')[
-                ['player_name', 'position', 'team', 'consistency_score', 'avg_points']
+                ['player_name', 'player_position', 'team', 'consistency_score', 'avg_points']
             ].copy()
             
             fig = px.bar(
@@ -1258,7 +1258,7 @@ def display_consistency_analysis(df: pd.DataFrame):
         with col_least:
             st.write("**Most Volatile Players**")
             least_consistent = display_df.nsmallest(10, 'consistency_score')[
-                ['player_name', 'position', 'team', 'consistency_score', 'avg_points']
+                ['player_name', 'player_position', 'team', 'consistency_score', 'avg_points']
             ].copy()
             
             fig = px.bar(
@@ -1282,7 +1282,7 @@ def display_consistency_analysis(df: pd.DataFrame):
             display_df,
             x='consistency_score',
             nbins=20,
-            color='position',
+            color='player_position',
             marginal='box',
             title="Distribution of Player Consistency Scores",
             labels={'consistency_score': 'Consistency Score (0-100)'}
@@ -1293,7 +1293,7 @@ def display_consistency_analysis(df: pd.DataFrame):
     with tab3:
         st.subheader("Detailed Consistency Metrics")
         
-        display_cols = ['player_name', 'position', 'team', 'avg_points', 'std_points',
+        display_cols = ['player_name', 'player_position', 'team', 'avg_points', 'std_points',
                        'consistency_score', 'cv', 'performance_range', 'games']
         
         display_data = display_df[display_cols].copy()
