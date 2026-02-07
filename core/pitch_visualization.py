@@ -4,6 +4,7 @@
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 import os
 from pathlib import Path
