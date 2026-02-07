@@ -26,43 +26,34 @@ except ImportError:
     logger.warning("Medallion schema loader not available, using legacy loader")
 
 # ============================================================
-#                   LOADING (SUPABASE) - SMART LOADER
+#                   LOADING (SUPABASE) - MEDALLION ONLY
 # ============================================================
 def load_data_auto(
     supabase,
     bucket="data",
-    use_medallion=True,
     local_gameweeks="Data/gameweeks.csv",
     local_fixtures="Data/fixtures.csv"
 ):
     """
-    Automatically load data using medallion schema if available, otherwise fall back to legacy.
+    Load data using medallion schema (Gold layer) from Supabase.
     
     Args:
         supabase: Supabase client instance
         bucket: Storage bucket name
-        use_medallion: Whether to try medallion schema first (default: True)
         local_gameweeks: Path to local gameweeks CSV
         local_fixtures: Path to local fixtures CSV
     
     Returns:
         Tuple of (gw_data_df, standings_df, gameweeks_df, fixtures_df)
-    """
-    if use_medallion and MEDALLION_AVAILABLE:
-        try:
-            logger.info("Attempting to load data from medallion schema (Gold layer)...")
-            return load_data_medallion(
-                supabase=supabase,
-                bucket=bucket,
-                local_gameweeks=local_gameweeks,
-                local_fixtures=local_fixtures
-            )
-        except Exception as e:
-            logger.warning(f"Medallion schema loading failed: {str(e)}")
-            logger.info("Falling back to legacy loader...")
     
-    # Fall back to legacy loader
-    return load_data_supabase(
+    Raises:
+        Exception: If Gold layer cannot be loaded
+    """
+    if not MEDALLION_AVAILABLE:
+        raise ImportError("Medallion data loader not available. Please check core/medallion_data_loader.py exists.")
+    
+    logger.info("Loading data from medallion schema (Gold layer)...")
+    return load_data_medallion(
         supabase=supabase,
         bucket=bucket,
         local_gameweeks=local_gameweeks,
@@ -70,154 +61,8 @@ def load_data_auto(
     )
 
 
-def load_data_supabase(
-    supabase,
-    bucket="data",
-    gw_data_file="gw_data.parquet",
-    standings_file="league_standings.csv",
-    local_gameweeks="Data/gameweeks.csv",
-    local_fixtures="Data/fixtures.csv"
-):
-    """
-    Load parquet + standings from Supabase, and gameweeks + fixtures locally.
-    
-    LEGACY LOADER - Loads flat files from old structure.
-    For new medallion schema, use load_data_auto() or load_data_medallion().
-    
-    Includes comprehensive error handling for all data sources.
-    """
-    
-    # Validate Supabase client
-    try:
-        validate_supabase_client(supabase)
-    except Exception as e:
-        logger.error(f"Supabase client validation failed: {str(e)}")
-        raise SupabaseError(f"Invalid Supabase configuration: {str(e)}")
-
-    # Load GW data from Supabase
-    try:
-        df = _download_parquet(supabase, bucket, gw_data_file)
-        validate_dataframe(df, "GW Data", min_rows=1)
-    except Exception as e:
-        logger.error(f"Failed to load GW data: {str(e)}")
-        raise
-
-    # Load League standings from Supabase
-    try:
-        standings = _download_csv(supabase, bucket, standings_file)
-        validate_dataframe(standings, "League Standings", min_rows=1)
-    except Exception as e:
-        logger.error(f"Failed to load league standings: {str(e)}")
-        raise
-
-    # Load fixtures and gameweeks locally
-    try:
-        gameweeks = _load_local_csv(local_gameweeks, "Gameweeks")
-        fixtures = _load_local_csv(local_fixtures, "Fixtures")
-    except Exception as e:
-        logger.error(f"Failed to load local files: {str(e)}")
-        raise
-
-    # Convert date/datetime columns
-    try:
-        _convert_datetime_columns(gameweeks, fixtures)
-    except Exception as e:
-        logger.error(f"Failed to convert datetime columns: {str(e)}")
-        raise DataValidationError(
-            f"Datetime conversion failed: {str(e)}"
-        )
-
-    logger.info("Successfully loaded all data")
-    return df, standings, gameweeks, fixtures
-
-
-# ---------- Helpers for Supabase downloads ----------
-def _download_parquet(supabase, bucket, file_name):
-    """Download and parse parquet file from Supabase with error handling."""
-    try:
-        data = safe_download_file(supabase, bucket, file_name, "parquet")
-        
-        if not data:
-            raise SupabaseDownloadError(f"No data received for {file_name}")
-        
-        df = pd.read_parquet(io.BytesIO(data))
-        logger.info(f"Parsed parquet file: {file_name} ({len(df)} rows)")
-        return df
-        
-    except Exception as e:
-        if isinstance(e, SupabaseDownloadError):
-            raise
-        logger.error(f"Parquet parsing failed for {file_name}: {str(e)}")
-        raise SupabaseDownloadError(
-            f"Failed to parse {file_name}: {str(e)}"
-        )
-
-
-def _download_csv(supabase, bucket, file_name):
-    """Download and parse CSV file from Supabase with error handling."""
-    try:
-        data = safe_download_file(supabase, bucket, file_name, "csv")
-        
-        if not data:
-            raise SupabaseDownloadError(f"No data received for {file_name}")
-        
-        df = pd.read_csv(io.BytesIO(data))
-        logger.info(f"Parsed CSV file: {file_name} ({len(df)} rows)")
-        return df
-        
-    except Exception as e:
-        if isinstance(e, SupabaseDownloadError):
-            raise
-        logger.error(f"CSV parsing failed for {file_name}: {str(e)}")
-        raise SupabaseDownloadError(
-            f"Failed to parse {file_name}: {str(e)}"
-        )
-
-
-def _load_local_csv(file_path, file_name):
-    """Load local CSV file with error handling."""
-    try:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(
-                f"Local file not found: {file_path}"
-            )
-        
-        df = pd.read_csv(file_path)
-        logger.info(f"Loaded local file: {file_name} ({len(df)} rows)")
-        return df
-        
-    except FileNotFoundError as e:
-        logger.error(f"File not found: {file_path}")
-        raise
-    except Exception as e:
-        logger.error(f"Failed to read {file_name}: {str(e)}")
-        raise DataValidationError(
-            f"Failed to read {file_name}: {str(e)}"
-        )
-
-
-def _convert_datetime_columns(gameweeks, fixtures):
-    """Convert datetime columns with error handling."""
-    try:
-        if "deadline_time" in gameweeks.columns:
-            gameweeks["deadline_time"] = pd.to_datetime(
-                gameweeks["deadline_time"], 
-                utc=True
-            )
-        
-        if "kickoff_time" in fixtures.columns:
-            fixtures["kickoff_time"] = pd.to_datetime(
-                fixtures["kickoff_time"], 
-                utc=True
-            )
-        
-        logger.info("Datetime conversion completed")
-        
-    except Exception as e:
-        logger.error(f"Datetime conversion error: {str(e)}")
-        raise DataValidationError(
-            f"Failed to convert datetime columns: {str(e)}"
-        )
+# Legacy loader removed - now only using medallion schema
+# If you need the old loader, check git history
 
 
 # ============================================================
