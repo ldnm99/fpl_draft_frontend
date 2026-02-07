@@ -298,6 +298,7 @@ def load_data_medallion(
         gw_data = gw_data.rename(columns={
             'gameweek_num': 'gw',
             'player_position': 'position',
+            'player_name': 'full_name',  # Add full_name alias
         })
         
         standings = create_manager_standings(dimensions, facts)
