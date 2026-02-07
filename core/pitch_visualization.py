@@ -639,8 +639,8 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         </html>
         """
         
-        # Use components.html for better rendering
-        components.html(html_content, height=1100, scrolling=False)
+        # Use components.html for better rendering (increased height to accommodate bench)
+        components.html(html_content, height=1300, scrolling=False)
         
     except Exception as e:
         st.error(f"Error displaying pitch: {str(e)}")
