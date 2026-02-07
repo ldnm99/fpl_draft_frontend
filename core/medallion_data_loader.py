@@ -244,15 +244,20 @@ def create_manager_standings(
     try:
         df = facts['manager_gw_performance'].copy()
         
+        # Handle both old and new column names from backend
+        # Backend may have 'manager_team_name' or 'team_name'
+        team_name_col = 'team_name' if 'team_name' in df.columns else 'manager_team_name'
+        
         # Aggregate total points per manager
-        standings = df.groupby(['manager_id', 'first_name', 'last_name', 'team_name']).agg({
+        standings = df.groupby(['manager_id', 'first_name', 'last_name', team_name_col]).agg({
             'gw_points': 'sum',
         }).reset_index()
         
         standings = standings.rename(columns={
             'gw_points': 'total_points',
             'first_name': 'manager_first_name',
-            'last_name': 'manager_last_name'
+            'last_name': 'manager_last_name',
+            team_name_col: 'team_name'  # Normalize to 'team_name'
         })
         
         standings = standings.sort_values('total_points', ascending=False).reset_index(drop=True)
@@ -264,6 +269,35 @@ def create_manager_standings(
     except Exception as e:
         logger.error(f"Failed to create manager standings: {str(e)}")
         raise DataValidationError(f"Failed to create manager standings: {str(e)}")
+
+
+# ============================================================
+#                   COLUMN NORMALIZATION
+# ============================================================
+def normalize_backend_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize backend column names to frontend expected names.
+    
+    The backend Gold layer may use slightly different column names.
+    This function maps them to the expected frontend names.
+    """
+    # Column mapping: backend_name -> frontend_name
+    column_map = {
+        'manager_team_name': 'team_name',  # Manager's team name
+        'player_position': 'player_position',  # Already correct
+        'gameweek_num': 'gameweek_num',  # Already correct
+        'player_name': 'player_name',  # Already correct
+        'short_name': 'short_name',  # Already correct
+    }
+    
+    # Only rename columns that exist
+    rename_dict = {old: new for old, new in column_map.items() if old in df.columns and old != new}
+    
+    if rename_dict:
+        df = df.rename(columns=rename_dict)
+        logger.debug(f"Normalized columns: {rename_dict}")
+    
+    return df
 
 
 # ============================================================
@@ -292,9 +326,12 @@ def load_data_medallion(
         # Use manager_gw_performance fact which already has player data joined
         gw_data = facts['manager_gw_performance'].copy()
         
+        # Normalize backend column names to frontend expected names
+        gw_data = normalize_backend_columns(gw_data)
+        
         # Ensure position column exists for sorting/display
         if 'position' not in gw_data.columns:
-            gw_data['player_position'] = range(1, len(gw_data) + 1)
+            gw_data['position'] = range(1, len(gw_data) + 1)
         
         standings = create_manager_standings(dimensions, facts)
         
