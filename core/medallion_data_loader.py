@@ -294,12 +294,26 @@ def load_data_medallion(
         # For now, use the manager_gw_performance fact which already has player data joined
         gw_data = facts['manager_gw_performance'].copy()
         
-        # Rename columns to match expected format
+        # Rename columns to match expected legacy format
         gw_data = gw_data.rename(columns={
             'gameweek_num': 'gw',
             'player_position': 'position',
-            'player_name': 'full_name',  # Add full_name alias
+            'player_name': 'full_name',
+            'short_name': 'Team',
+            'team_position': 'Role',
+            'gw_points': 'Points',
+            'gw_bonus': 'Bonus',
+            'gw_minutes': 'minutes',
+            'gw_goals': 'goals',
+            'gw_assists': 'assists',
+            'gw_clean_sheets': 'clean_sheets',
         })
+        
+        # Add Player column (alias for full_name)
+        gw_data['Player'] = gw_data['full_name']
+        
+        # Add Position column (row index for sorting)
+        gw_data['Position'] = range(1, len(gw_data) + 1)
         
         standings = create_manager_standings(dimensions, facts)
         
