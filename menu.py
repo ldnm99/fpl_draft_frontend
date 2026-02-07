@@ -85,6 +85,10 @@ def trigger_pipeline():
 # ========================================================================
 # LOAD DATA
 # ========================================================================
+# Initialize session state for data reload trigger
+if 'data_reload_counter' not in st.session_state:
+    st.session_state.data_reload_counter = 0
+
 df = None
 standings = None
 gameweeks = None
@@ -92,8 +96,10 @@ fixtures = None
 
 with st.spinner("📊 Loading data..."):
     try:
+        # Pass reload counter to force fresh load (prevents caching issues)
+        _reload_trigger = st.session_state.data_reload_counter
         df, standings, gameweeks, fixtures = load_data_auto(supabase)
-        display_info("✅ Data loaded successfully from Gold layer")
+        display_info(f"✅ Data loaded successfully from Gold layer (refresh #{_reload_trigger})")
     except Exception as e:
         display_error(e, "Failed to load data")
         st.stop()
@@ -365,7 +371,7 @@ st.divider()
 # ========================================================================
 st.markdown("## 🔄 Data Management")
 
-pipeline_col1, pipeline_col2 = st.columns([2, 1])
+pipeline_col1, pipeline_col2, pipeline_col3 = st.columns([2, 2, 1])
 
 with pipeline_col1:
     st.markdown("### 📥 ETL Pipeline")
@@ -378,7 +384,9 @@ with pipeline_col1:
 
             if status == 204:
                 st.cache_data.clear()
+                st.session_state.data_reload_counter += 1
                 st.success("✅ Pipeline triggered! Data will be updated shortly.")
+                st.info("🔄 Please wait 30-60 seconds, then click 'Refresh Data' to see updates.")
                 logger.info("Pipeline triggered successfully")
             else:
                 display_error(
@@ -389,12 +397,22 @@ with pipeline_col1:
             display_error(e, "Failed to trigger ETL pipeline")
 
 with pipeline_col2:
+    st.markdown("### 🔄 Refresh Data")
+    st.write("Reload data from Supabase to see latest changes:")
+    
+    if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
+        st.cache_data.clear()
+        st.session_state.data_reload_counter += 1
+        st.success("✅ Data refreshed! Page will reload...")
+        st.rerun()
+
+with pipeline_col3:
     st.markdown("### ℹ️ Info")
-    with st.expander("About ETL"):
+    with st.expander("About"):
         st.write(
-            "The ETL pipeline fetches the latest FPL data from the official API "
-            "and updates the Supabase database. This ensures all dashboard metrics "
-            "reflect the most current information."
+            "**ETL Pipeline**: Fetches the latest FPL data from the official API "
+            "and updates the Supabase database.\n\n"
+            "**Refresh Data**: Reloads data from Supabase to display the latest updates."
         )
 
 st.divider()
