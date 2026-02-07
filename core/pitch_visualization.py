@@ -197,6 +197,9 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         formation = detect_formation(starting_xi)
         position_coords = get_formation_positions(formation)
         
+        # Calculate total gameweek points
+        total_gw_points = int(squad_df['gw_points'].sum())
+        
         # Build enhanced HTML with FPL styling
         html_content = f"""
         <!DOCTYPE html>
@@ -214,6 +217,41 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 border-radius: 8px;
                 padding: 20px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            }}
+            
+            .points-scoreboard {{
+                background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                text-align: center;
+            }}
+            
+            .points-heading {{
+                color: #37003c;
+                font-size: 14px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin: 0 0 8px 0;
+            }}
+            
+            .points-value {{
+                color: #37003c;
+                font-size: 48px;
+                font-weight: 900;
+                line-height: 1;
+                margin: 0;
+            }}
+            
+            .points-label {{
+                color: rgba(55, 0, 60, 0.7);
+                font-size: 12px;
+                font-weight: 600;
+                margin-top: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }}
             
             .pitch-wrapper {{
@@ -367,6 +405,11 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         </head>
         <body style="margin: 0; padding: 0; background: transparent;">
         <div class="pitch-container">
+            <div class="points-scoreboard">
+                <h4 class="points-heading">Gameweek Points</h4>
+                <div class="points-value">{total_gw_points}</div>
+                <div class="points-label">Total Points GW {int(latest_gw)}</div>
+            </div>
             <div class="formation-badge">Formation: {formation}</div>
             <div class="pitch-wrapper">
                 <div class="pitch-field">
