@@ -16,9 +16,60 @@ from core.error_handler import (
 
 logger = get_logger(__name__)
 
+# Try to import medallion loader, fall back to legacy if not available
+try:
+    from core.medallion_data_loader import load_data_medallion
+    MEDALLION_AVAILABLE = True
+    logger.info("Medallion schema loader available")
+except ImportError:
+    MEDALLION_AVAILABLE = False
+    logger.warning("Medallion schema loader not available, using legacy loader")
+
 # ============================================================
-#                   LOADING (SUPABASE)
+#                   LOADING (SUPABASE) - SMART LOADER
 # ============================================================
+def load_data_auto(
+    supabase,
+    bucket="data",
+    use_medallion=True,
+    local_gameweeks="Data/gameweeks.csv",
+    local_fixtures="Data/fixtures.csv"
+):
+    """
+    Automatically load data using medallion schema if available, otherwise fall back to legacy.
+    
+    Args:
+        supabase: Supabase client instance
+        bucket: Storage bucket name
+        use_medallion: Whether to try medallion schema first (default: True)
+        local_gameweeks: Path to local gameweeks CSV
+        local_fixtures: Path to local fixtures CSV
+    
+    Returns:
+        Tuple of (gw_data_df, standings_df, gameweeks_df, fixtures_df)
+    """
+    if use_medallion and MEDALLION_AVAILABLE:
+        try:
+            logger.info("Attempting to load data from medallion schema (Gold layer)...")
+            return load_data_medallion(
+                supabase=supabase,
+                bucket=bucket,
+                local_gameweeks=local_gameweeks,
+                local_fixtures=local_fixtures
+            )
+        except Exception as e:
+            logger.warning(f"Medallion schema loading failed: {str(e)}")
+            logger.info("Falling back to legacy loader...")
+    
+    # Fall back to legacy loader
+    return load_data_supabase(
+        supabase=supabase,
+        bucket=bucket,
+        local_gameweeks=local_gameweeks,
+        local_fixtures=local_fixtures
+    )
+
+
 def load_data_supabase(
     supabase,
     bucket="data",
@@ -29,6 +80,9 @@ def load_data_supabase(
 ):
     """
     Load parquet + standings from Supabase, and gameweeks + fixtures locally.
+    
+    LEGACY LOADER - Loads flat files from old structure.
+    For new medallion schema, use load_data_auto() or load_data_medallion().
     
     Includes comprehensive error handling for all data sources.
     """

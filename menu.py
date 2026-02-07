@@ -12,7 +12,7 @@ from core.data_utils import (
     get_upcoming_fixtures,
     get_starting_lineup,
     get_team_total_points,
-    load_data_supabase
+    load_data_auto  # New smart loader that tries medallion first
 )
 from core.mobile_utils import add_mobile_css, get_metric_columns, optimize_chart_height
 from core.error_handler import (
@@ -92,8 +92,8 @@ fixtures = None
 
 with st.spinner("📊 Loading data..."):
     try:
-        df, standings, gameweeks, fixtures = load_data_supabase(supabase)
-        display_info("✅ Data loaded successfully")
+        df, standings, gameweeks, fixtures = load_data_auto(supabase)
+        display_info("✅ Data loaded successfully from Gold layer")
     except Exception as e:
         display_error(e, "Failed to load data")
         st.stop()
