@@ -24,8 +24,8 @@ def get_squad_status(manager_df: pd.DataFrame, latest_gw_only: bool = True) -> p
     
     # Get latest gameweek if specified
     if latest_gw_only:
-        latest_gw = manager_df['gw'].max()
-        squad_df = manager_df[manager_df['gw'] == latest_gw].copy()
+        latest_gw = manager_df['gameweek_num'].max()
+        squad_df = manager_df[manager_df['gameweek_num'] == latest_gw].copy()
     else:
         squad_df = manager_df.copy()
     
@@ -33,7 +33,7 @@ def get_squad_status(manager_df: pd.DataFrame, latest_gw_only: bool = True) -> p
         return pd.DataFrame()
     
     # Get unique players (remove duplicates)
-    players_df = squad_df.drop_duplicates(subset=['full_name', 'player_id']).copy()
+    players_df = squad_df.drop_duplicates(subset=['player_name', 'player_id']).copy()
     
     # Determine status
     status_list = []
@@ -58,9 +58,9 @@ def get_squad_status(manager_df: pd.DataFrame, latest_gw_only: bool = True) -> p
             risk_level = 0
         
         status_list.append({
-            'full_name': player.get('full_name', 'Unknown'),
-            'position': player.get('position', 'N/A'),
-            'real_team': player.get('real_team', 'N/A'),
+            'player_name': player.get('player_name', 'Unknown'),
+            'player_position': player.get('player_position', 'N/A'),
+            'short_name': player.get('short_name', 'N/A'),
             'team_position': player.get('team_position', 15),  # 15+ = bench
             'gw_points': player.get('gw_points', 0),
             'status': status,

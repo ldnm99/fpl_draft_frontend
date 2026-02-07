@@ -78,18 +78,18 @@ def get_top_defensive_players(gw_data, home_team_id, away_team_id, gw):
         return None, None
     
     try:
-        gw_match_data = gw_data[gw_data["gw"] == gw].copy()
+        gw_match_data = gw_data[gw_data["gameweek_num"] == gw].copy()
         
         # Get home team players (top 3 by defensive contribution)
         home_players = gw_match_data[gw_match_data["manager_team_id"] == home_team_id].copy()
         home_top = home_players.nlargest(3, "gw_defensive_contribution")[
-            ["short_name", "position", "gw_defensive_contribution", "real_team"]
+            ["player_name", "player_position", "gw_defensive_contribution", "short_name"]
         ].reset_index(drop=True)
         
         # Get away team players (top 3 by defensive contribution)
         away_players = gw_match_data[gw_match_data["manager_team_id"] == away_team_id].copy()
         away_top = away_players.nlargest(3, "gw_defensive_contribution")[
-            ["short_name", "position", "gw_defensive_contribution", "real_team"]
+            ["player_name", "player_position", "gw_defensive_contribution", "short_name"]
         ].reset_index(drop=True)
         
         return home_top, away_top
@@ -104,18 +104,18 @@ def get_top_bonus_players(gw_data, home_team_id, away_team_id, gw):
         return None, None
     
     try:
-        gw_match_data = gw_data[gw_data["gw"] == gw].copy()
+        gw_match_data = gw_data[gw_data["gameweek_num"] == gw].copy()
         
         # Get home team players (top 3 by bonus points)
         home_players = gw_match_data[gw_match_data["manager_team_id"] == home_team_id].copy()
         home_top = home_players.nlargest(3, "gw_bps")[
-            ["short_name", "position", "gw_bps", "gw_bonus", "real_team"]
+            ["player_name", "player_position", "gw_bps", "gw_bonus", "short_name"]
         ].reset_index(drop=True)
         
         # Get away team players (top 3 by bonus points)
         away_players = gw_match_data[gw_match_data["manager_team_id"] == away_team_id].copy()
         away_top = away_players.nlargest(3, "gw_bps")[
-            ["short_name", "position", "gw_bps", "gw_bonus", "real_team"]
+            ["player_name", "player_position", "gw_bps", "gw_bonus", "short_name"]
         ].reset_index(drop=True)
         
         return home_top, away_top

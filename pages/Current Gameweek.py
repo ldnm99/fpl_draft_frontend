@@ -19,8 +19,8 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 df, standings, gameweeks, fixtures = load_data_supabase(supabase)  # <-- unpack all 4
 
 #---------------- OPERATIONS ----------------
-latest_gw = df["gw"].max()
-latest_df = df[df["gw"] == latest_gw].copy()
+latest_gw = df["gameweek_num"].max()
+latest_df = df[df["gameweek_num"] == latest_gw].copy()
 
 # Create fixture name column (e.g. "Liverpool vs Bournemouth")
 fixtures["fixture_name"] = fixtures["team_h_name"] + " vs " + fixtures["team_a_name"]
@@ -29,7 +29,7 @@ fixtures["fixture_name"] = fixtures["team_h_name"] + " vs " + fixtures["team_a_n
 # --- 1️⃣ Merge by home team ---
 merged = latest_df.merge(
     fixtures[["event", "team_h_name", "team_a_name", "fixture_name"]],
-    left_on=["gw", "real_team"],
+    left_on=["gameweek_num", "short_name"],
     right_on=["event", "team_h_name"],
     how="left"
 )
@@ -38,9 +38,9 @@ merged = latest_df.merge(
 mask_missing = merged["fixture_name"].isna()
 
 # --- 3️⃣ Merge again for away teams, but only on those missing rows ---
-away_merged = merged.loc[mask_missing, ["gw", "real_team"]].merge(
+away_merged = merged.loc[mask_missing, ["gameweek_num", "short_name"]].merge(
     fixtures[["event", "team_h_name", "team_a_name", "fixture_name"]],
-    left_on=["gw", "real_team"],
+    left_on=["gameweek_num", "short_name"],
     right_on=["event", "team_a_name"],
     how="left"
 )
@@ -51,7 +51,7 @@ merged.loc[mask_missing, "fixture_name"] = away_merged["fixture_name"].values
 # --- 5️⃣ Clean up ---
 latest_df = merged.drop(columns=["event", "team_h_name", "team_a_name"], errors="ignore")
 
-print(latest_df[["real_team", "fixture_name"]].drop_duplicates().head(10))
+print(latest_df[["short_name", "fixture_name"]].drop_duplicates().head(10))
 
 latest_df[["def_points", "progress", "total_contributions"]] = latest_df.apply(calc_defensive_points, axis=1)
 # ---------------- DASHBOARD TITLE ------------------
@@ -72,7 +72,7 @@ st.header(f"🛡️ Defensive Contributions - Gameweek {latest_gw}")
 
 for fixture in latest_df["fixture_name"].unique():
     fixture_df = latest_df[latest_df["fixture_name"] == fixture]
-    teams = fixture_df["real_team"].unique()  
+    teams = fixture_df["short_name"].unique()  
 
     # Skip invalid or incomplete fixtures
     if len(teams) != 2:
@@ -82,14 +82,14 @@ for fixture in latest_df["fixture_name"].unique():
     col1, col2 = st.columns(2)
 
     for col, team in zip([col1, col2], teams):
-        team_df = fixture_df[fixture_df["real_team"] == team] 
-        team_df = team_df[team_df["position"].isin(["DEF", "MID"])]
+        team_df = fixture_df[fixture_df["short_name"] == team] 
+        team_df = team_df[team_df["player_position"].isin(["DEF", "MID"])]
         top5 = team_df.sort_values("total_contributions", ascending=False).head(5)
 
         with col:
             st.markdown(f"### {team}")
             for _, row in top5.iterrows():
-                st.text(f"{row['short_name']} ({row['position']})")
+                st.text(f"{row['short_name']} ({row['player_position']})")
                 st.progress(row["progress"])
                 st.caption(f"Total contributions: {row['total_contributions']} | Defensive points: {row['def_points']}")
 

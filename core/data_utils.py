@@ -127,9 +127,9 @@ def get_manager_data(df: pd.DataFrame, manager_name: str) -> pd.DataFrame:
     """
     Returns all rows associated with a manager.
     """
-    if manager_name not in df["manager_team_name"].unique():
+    if manager_name not in df["team_name"].unique():
         return pd.DataFrame()
-    return df[df["manager_team_name"] == manager_name]
+    return df[df["team_name"] == manager_name]
 
 
 # ============================================================
@@ -148,8 +148,8 @@ def calculate_team_gw_points(starting_players: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
 
     table = starting_players.pivot_table(
-        index="manager_team_name",
-        columns="gw",
+        index="team_name",
+        columns="gameweek_num",
         values="gw_points",
         aggfunc="sum",
         fill_value=0
@@ -184,10 +184,10 @@ def get_team_total_points(starting_players: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["Team", "Total Points"])
 
     return (
-        starting_players.groupby("manager_team_name")["gw_points"]
+        starting_players.groupby("team_name")["gw_points"]
         .sum()
         .reset_index()
-        .rename(columns={"manager_team_name": "Team", "gw_points": "Total Points"})
+        .rename(columns={"team_name": "Team", "gw_points": "Total Points"})
         .sort_values("Total Points", ascending=False)
         .reset_index(drop=True)
     )
@@ -201,9 +201,9 @@ def points_per_player_position(starting_players: pd.DataFrame) -> pd.DataFrame:
     Returns total points by player position.
     """
     if starting_players.empty:
-        return pd.DataFrame(columns=["position", "gw_points"])
+        return pd.DataFrame(columns=["player_position", "gw_points"])
 
-    return starting_players.groupby("position")["gw_points"].sum().reset_index()
+    return starting_players.groupby("player_position")["gw_points"].sum().reset_index()
 
 
 # ============================================================
@@ -217,7 +217,7 @@ def get_top_performers(manager_df: pd.DataFrame, top_n: int = 10) -> pd.DataFram
         return pd.DataFrame()
 
     agg_df = (
-        manager_df.groupby(["gw", "full_name", "real_team"], as_index=False)
+        manager_df.groupby(["gameweek_num", "player_name", "short_name"], as_index=False)
         .agg(
             total_points=("gw_points", "sum"),
             Benched=("team_position", lambda x: (x > 11).any())
@@ -226,9 +226,9 @@ def get_top_performers(manager_df: pd.DataFrame, top_n: int = 10) -> pd.DataFram
 
     top_df = agg_df.sort_values("total_points", ascending=False).head(top_n)
     return top_df.rename(columns={
-        "gw": "Gameweek",
-        "full_name": "Player",
-        "real_team": "Team",
+        "gameweek_num": "Gameweek",
+        "player_name": "Player",
+        "short_name": "Team",
         "total_points": "Points"
     })
 
@@ -239,15 +239,14 @@ def get_top_performers(manager_df: pd.DataFrame, top_n: int = 10) -> pd.DataFram
 def get_player_progression(manager_df: pd.DataFrame) -> pd.DataFrame:
     """
     Returns points progression for every player in every gameweek.
-    (You did not provide your original implementation, so this is a placeholder)
     """
     if manager_df.empty:
         return pd.DataFrame()
 
     return (
-        manager_df.groupby(["full_name", "gw"], as_index=False)["gw_points"]
+        manager_df.groupby(["player_name", "gameweek_num"], as_index=False)["gw_points"]
         .sum()
-        .pivot(index="full_name", columns="gw", values="gw_points")
+        .pivot(index="player_name", columns="gameweek_num", values="gw_points")
         .fill_value(0)
     )
 
@@ -279,10 +278,10 @@ def get_optimal_lineup(manager_df: pd.DataFrame, gameweek: int = None) -> dict:
     
     # Filter to specific gameweek if provided
     if gameweek is not None:
-        gw_df = manager_df[manager_df["gw"] == gameweek].copy()
+        gw_df = manager_df[manager_df["gameweek_num"] == gameweek].copy()
     else:
         # Use latest gameweek
-        gw_df = manager_df[manager_df["gw"] == manager_df["gw"].max()].copy()
+        gw_df = manager_df[manager_df["gameweek_num"] == manager_df["gameweek_num"].max()].copy()
     
     if gw_df.empty:
         return {
@@ -294,16 +293,16 @@ def get_optimal_lineup(manager_df: pd.DataFrame, gameweek: int = None) -> dict:
         }
     
     # Group by player to get latest entry (in case of duplicates)
-    gw_df = gw_df.sort_values("gw_points", ascending=False).drop_duplicates(subset=["full_name"])
+    gw_df = gw_df.sort_values("gw_points", ascending=False).drop_duplicates(subset=["player_name"])
     
     # Get position counts
-    positions = gw_df["position"].unique()
+    positions = gw_df["player_position"].unique()
     
     # Separate players by position
-    gks = gw_df[gw_df["position"] == "GK"].sort_values("gw_points", ascending=False)
-    defs = gw_df[gw_df["position"] == "DEF"].sort_values("gw_points", ascending=False)
-    mids = gw_df[gw_df["position"] == "MID"].sort_values("gw_points", ascending=False)
-    fwds = gw_df[gw_df["position"] == "FWD"].sort_values("gw_points", ascending=False)
+    gks = gw_df[gw_df["player_position"] == "GK"].sort_values("gw_points", ascending=False)
+    defs = gw_df[gw_df["player_position"] == "DEF"].sort_values("gw_points", ascending=False)
+    mids = gw_df[gw_df["player_position"] == "MID"].sort_values("gw_points", ascending=False)
+    fwds = gw_df[gw_df["player_position"] == "FWD"].sort_values("gw_points", ascending=False)
     
     errors = []
     
@@ -379,9 +378,9 @@ def get_all_optimal_lineups(manager_df: pd.DataFrame) -> pd.DataFrame:
     
     results = []
     
-    for gw in sorted(manager_df["gw"].unique()):
+    for gw in sorted(manager_df["gameweek_num"].unique()):
         # Get actual points (only starting XI)
-        gw_data = manager_df[manager_df["gw"] == gw]
+        gw_data = manager_df[manager_df["gameweek_num"] == gw]
         actual_points = gw_data[gw_data["team_position"] <= 11]["gw_points"].sum()
         
         # Get optimal points
@@ -422,19 +421,19 @@ def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     
     # Ensure we have the required columns
-    required_cols = ['full_name', 'position', 'gw_points']
+    required_cols = ['player_name', 'player_position', 'gw_points']
     if not all(col in df.columns for col in required_cols):
         return pd.DataFrame()
     
     # Group by player and calculate metrics
     try:
-        player_stats = df.groupby(['full_name', 'position']).agg({
+        player_stats = df.groupby(['player_name', 'player_position']).agg({
             'gw_points': ['sum', 'mean', 'std', 'count'],
             'gw_bonus': ['sum', 'mean'],
-            'real_team': 'first'
+            'short_name': 'first'
         }).reset_index()
         
-        player_stats.columns = ['player_name', 'position', 'total_points', 'avg_points', 
+        player_stats.columns = ['player_name', 'player_position', 'total_points', 'avg_points', 
                                 'std_points', 'games_played', 'total_bonus', 'avg_bonus', 'team']
     except Exception as e:
         logger.error(f"Error in player metrics aggregation: {str(e)}")
@@ -452,8 +451,8 @@ def prepare_player_metrics(df: pd.DataFrame) -> pd.DataFrame:
     player_stats['points_per_appearance'] = player_stats['avg_points']
     
     # Normalize metrics to 0-1 scale per position for fair comparison
-    for pos in player_stats['position'].unique():
-        pos_mask = player_stats['position'] == pos
+    for pos in player_stats['player_position'].unique():
+        pos_mask = player_stats['player_position'] == pos
         
         if player_stats.loc[pos_mask, 'avg_points'].max() > 0:
             player_stats.loc[pos_mask, 'avg_points_norm'] = (
@@ -519,7 +518,7 @@ def cluster_players(df: pd.DataFrame, n_clusters: int = 4, position: str = None)
     
     # Filter by position if specified
     if position:
-        player_metrics = player_metrics[player_metrics['position'] == position].copy()
+        player_metrics = player_metrics[player_metrics['player_position'] == position].copy()
     
     if len(player_metrics) < n_clusters:
         return {
@@ -570,13 +569,13 @@ def analyze_player_trend(df: pd.DataFrame, player_name: str) -> dict:
     except ImportError:
         return {'error': 'scipy not installed'}
     
-    player_data = df[df['full_name'] == player_name].sort_values('gw').copy()
+    player_data = df[df['player_name'] == player_name].sort_values('gameweek_num').copy()
     
     if player_data.empty or len(player_data) < 2:
         return {'error': f'Insufficient data for {player_name}'}
     
     # Prepare data
-    X = player_data['gw'].values
+    X = player_data['gameweek_num'].values
     y = player_data['gw_points'].values
     
     # Handle missing values
@@ -604,7 +603,7 @@ def analyze_player_trend(df: pd.DataFrame, player_name: str) -> dict:
     predicted_next = slope * (last_gw + 1) + intercept
     
     # Trend dataframe
-    trend_df = player_data[['gw', 'full_name', 'position', 'gw_points', 'real_team']].copy()
+    trend_df = player_data[['gameweek_num', 'player_name', 'player_position', 'gw_points', 'short_name']].copy()
     trend_df['trend_line'] = slope * X + intercept
     
     return {
@@ -627,7 +626,7 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
     selecting "consistent" players who simply haven't played.
     
     Returns DataFrame with:
-    - player_name, position, team
+    - player_name, player_position, team
     - avg_points, std_points, min_points, max_points, total_minutes
     - coefficient_of_variation (consistency metric)
     - consistency_score (0-100, higher = more consistent)
@@ -637,14 +636,14 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     
     # Ensure we have the required columns
-    if 'gw_points' not in df.columns or 'full_name' not in df.columns or 'position' not in df.columns:
+    if 'gw_points' not in df.columns or 'player_name' not in df.columns or 'player_position' not in df.columns:
         return pd.DataFrame()
     
     try:
         # Include gw_minutes if available
         agg_dict = {
             'gw_points': ['mean', 'std', 'min', 'max', 'count', 'sum'],
-            'real_team': 'first',
+            'short_name': 'first',
             'gw_bonus': 'sum'
         }
         
@@ -652,14 +651,14 @@ def calculate_player_consistency(df: pd.DataFrame) -> pd.DataFrame:
         if 'gw_minutes' in df.columns:
             agg_dict['gw_minutes'] = 'sum'
         
-        consistency_data = df.groupby(['full_name', 'position']).agg(agg_dict).reset_index()
+        consistency_data = df.groupby(['player_name', 'player_position']).agg(agg_dict).reset_index()
         
         # Build column names dynamically
         if 'gw_minutes' in df.columns:
-            consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
+            consistency_data.columns = ['player_name', 'player_position', 'avg_points', 'std_points', 
                                         'min_points', 'max_points', 'games', 'total_points', 'team', 'total_bonus', 'total_minutes']
         else:
-            consistency_data.columns = ['player_name', 'position', 'avg_points', 'std_points', 
+            consistency_data.columns = ['player_name', 'player_position', 'avg_points', 'std_points', 
                                         'min_points', 'max_points', 'games', 'total_points', 'team', 'total_bonus']
             consistency_data['total_minutes'] = 0
     except Exception as e:
@@ -734,13 +733,13 @@ def get_player_archetypes(df: pd.DataFrame) -> dict:
     
     archetypes = {
         'High Performers': player_metrics.nlargest(5, 'avg_points')[
-            ['player_name', 'avg_points', 'position']
+            ['player_name', 'avg_points', 'player_position']
         ],
         'Most Consistent': player_metrics.nsmallest(5, 'consistency')[
-            ['player_name', 'consistency', 'position']
+            ['player_name', 'consistency', 'player_position']
         ],
         'Bonus Hunters': player_metrics.nlargest(5, 'bonus_efficiency')[
-            ['player_name', 'bonus_efficiency', 'position']
+            ['player_name', 'bonus_efficiency', 'player_position']
         ],
     }
     
@@ -757,7 +756,7 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     Returns league-wide summary with actual vs optimal points.
     
     Returns:
-        DataFrame with columns: manager_team_name, actual_points, optimal_points, 
+        DataFrame with columns: team_name, actual_points, optimal_points, 
                                difference, potential_gain_pct
     """
     if df.empty:
@@ -765,12 +764,12 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
     
     try:
         # Get unique teams
-        teams = df['manager_team_name'].unique()
+        teams = df['team_name'].unique()
         
         league_results = []
         
         for team in teams:
-            team_df = df[df['manager_team_name'] == team]
+            team_df = df[df['team_name'] == team]
             
             if team_df.empty:
                 continue
@@ -791,7 +790,7 @@ def get_league_optimized_lineups(df: pd.DataFrame) -> pd.DataFrame:
             potential_gain_pct = ((potential_gain / actual_points) * 100) if actual_points > 0 else 0
             
             league_results.append({
-                'manager_team_name': team,
+                'team_name': team,
                 'actual_points': actual_points,
                 'optimal_points': optimal_points,
                 'difference': potential_gain,

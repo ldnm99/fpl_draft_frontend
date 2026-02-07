@@ -16,8 +16,8 @@ manager_name = "Blue Lock XI"
 manager_df = get_manager_data(df, manager_name)
 
 print(f"Total rows for {manager_name}: {len(manager_df)}")
-print(f"Unique gameweeks: {sorted(manager_df['gw'].unique())}")
-print(f"Unique players: {manager_df['full_name'].nunique()}")
+print(f"Unique gameweeks: {sorted(manager_df['gameweek_num'].unique())}")
+print(f"Unique players: {manager_df['player_name'].nunique()}")
 
 # Calculate actual points directly
 actual_direct = manager_df[manager_df['team_position'] <= 11]['gw_points'].sum()
@@ -33,7 +33,7 @@ print(gw_results[['gameweek', 'actual_points', 'optimal_points']])
 
 # Check for duplicates per gameweek
 print("\n--- Checking for duplicates ---")
-for gw in sorted(manager_df['gw'].unique())[:3]:  # First 3 gameweeks
-    gw_data = manager_df[manager_df['gw'] == gw]
+for gw in sorted(manager_df['gameweek_num'].unique())[:3]:  # First 3 gameweeks
+    gw_data = manager_df[manager_df['gameweek_num'] == gw]
     starting = gw_data[gw_data['team_position'] <= 11]
     print(f"GW {gw}: Total rows={len(gw_data)}, Starting XI rows={len(starting)}, Sum of points={starting['gw_points'].sum()}")

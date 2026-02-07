@@ -66,8 +66,8 @@ def display_squad_pitch(manager_df: pd.DataFrame):
     
     try:
         # Get latest gameweek
-        latest_gw = manager_df['gw'].max()
-        squad_df = manager_df[manager_df['gw'] == latest_gw].copy()
+        latest_gw = manager_df['gameweek_num'].max()
+        squad_df = manager_df[manager_df['gameweek_num'] == latest_gw].copy()
         
         if squad_df.empty:
             st.error("ERROR: No squad data for current gameweek.")
@@ -101,7 +101,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         
         # Add starting XI overlays
         for pos in ['GK', 'DEF', 'MID', 'FWD']:
-            players = starting_xi[starting_xi['position'] == pos].sort_values('full_name')
+            players = starting_xi[starting_xi['player_position'] == pos].sort_values('player_name')
             coords = position_coords.get(pos, [])
             
             for idx, (_, player) in enumerate(players.iterrows()):
@@ -111,14 +111,14 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                     color = "#2ecc71" if points > 0 else "#e74c3c"
                     
                     # Get kit image
-                    kit_base64 = get_kit_base64(player['real_team'])
+                    kit_base64 = get_kit_base64(player['short_name'])
                     kit_html = f'<img src="data:image/png;base64,{kit_base64}" style="width: 60px; height: 80px; object-fit: cover; border-radius: 3px;">' if kit_base64 else '<div style="width: 60px; height: 80px; background: #ccc; display: flex; align-items: center; justify-content: center; border-radius: 3px;">🎽</div>'
                     
                     html_content += f"""
                     <div style="position: absolute; left: {x_pct}%; top: {y_pct}%; transform: translate(-50%, -50%); text-align: center;">
                         {kit_html}
                         <div style="background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; margin-top: 3px; border-radius: 3px; font-size: 10px; font-weight: bold; white-space: nowrap; width: 70px; overflow: hidden; text-overflow: ellipsis;">
-                            {player['full_name'][:12]}
+                            {player['player_name'][:12]}
                         </div>
                         <div style="background: {color}; color: white; padding: 2px 6px; margin-top: 1px; border-radius: 3px; font-size: 9px; font-weight: bold;">
                             {points}
@@ -137,14 +137,14 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         for _, player in bench.iterrows():
             points = int(player['gw_points'])
             color = "#2ecc71" if points > 0 else "#e74c3c"
-            kit_base64 = get_kit_base64(player['real_team'])
+            kit_base64 = get_kit_base64(player['short_name'])
             kit_html = f'<img src="data:image/png;base64,{kit_base64}" style="width: 50px; height: 70px; object-fit: cover; border-radius: 2px;">' if kit_base64 else '<div style="width: 50px; height: 70px; background: #ccc; display: flex; align-items: center; justify-content: center; border-radius: 2px;">🎽</div>'
             
             html_content += f"""
             <div style="text-align: center;">
                 {kit_html}
                 <div style="background: rgba(0,0,0,0.8); color: white; padding: 2px 4px; margin-top: 3px; border-radius: 2px; font-size: 9px; font-weight: bold; white-space: nowrap; width: 60px; overflow: hidden; text-overflow: ellipsis;">
-                    {player['full_name'][:10]}
+                    {player['player_name'][:10]}
                 </div>
                 <div style="background: {color}; color: white; padding: 2px 4px; margin-top: 1px; border-radius: 2px; font-size: 8px; font-weight: bold;">
                     {points}

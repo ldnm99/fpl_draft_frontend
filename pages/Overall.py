@@ -51,7 +51,7 @@ st.markdown("---")
 col_filter1, col_filter2, col_filter3 = st.columns([2, 2, 1], gap="medium")
 
 with col_filter1:
-    min_gw, max_gw = int(df['gw'].min()), int(df['gw'].max())
+    min_gw, max_gw = int(df['gameweek_num'].min()), int(df['gameweek_num'].max())
     selected_gw_range = st.slider(
         "Select Gameweek Range",
         min_value=min_gw,
@@ -63,7 +63,7 @@ with col_filter1:
 with col_filter2:
     selected_team = st.selectbox(
         "Filter by Manager (Optional)",
-        options=["All Managers"] + sorted(df['manager_team_name'].dropna().unique()),
+        options=["All Managers"] + sorted(df['team_name'].dropna().unique()),
         index=0
     )
 
@@ -76,12 +76,12 @@ with col_filter3:
 # ============================================================
 
 filtered_df = df[
-    (df['gw'] >= selected_gw_range[0]) &
-    (df['gw'] <= selected_gw_range[1])
+    (df['gameweek_num'] >= selected_gw_range[0]) &
+    (df['gameweek_num'] <= selected_gw_range[1])
 ]
 
 if selected_team != "All Managers":
-    filtered_df = filtered_df[filtered_df['manager_team_name'] == selected_team]
+    filtered_df = filtered_df[filtered_df['team_name'] == selected_team]
 
 # Calculate metrics
 starting_players = get_starting_lineup(filtered_df)
@@ -254,18 +254,18 @@ with tab3:
     
     # Prepare data for trend analysis
     team_gw_points_melted = team_gw_points.reset_index().melt(
-        id_vars='manager_team_name',
-        var_name='gw',
+        id_vars='team_name',
+        var_name='gameweek_num',
         value_name='points'
-    ) if not team_gw_points.empty else pd.DataFrame(columns=['manager_team_name', 'gw', 'points'])
+    ) if not team_gw_points.empty else pd.DataFrame(columns=['team_name', 'gameweek_num', 'points'])
     
     # Remove 'Total' and filter by range
-    team_gw_points_melted = team_gw_points_melted[team_gw_points_melted['gw'] != 'Total']
+    team_gw_points_melted = team_gw_points_melted[team_gw_points_melted['gameweek_num'] != 'Total']
     if not team_gw_points_melted.empty:
-        team_gw_points_melted['gw'] = team_gw_points_melted['gw'].astype(int)
+        team_gw_points_melted['gameweek_num'] = team_gw_points_melted['gameweek_num'].astype(int)
         team_gw_points_melted = team_gw_points_melted[
-            (team_gw_points_melted['gw'] >= selected_gw_range[0]) &
-            (team_gw_points_melted['gw'] <= selected_gw_range[1])
+            (team_gw_points_melted['gameweek_num'] >= selected_gw_range[0]) &
+            (team_gw_points_melted['gameweek_num'] <= selected_gw_range[1])
         ]
     
     col_trend1, col_trend2 = st.columns([1, 1], gap="large")
@@ -277,10 +277,10 @@ with tab3:
             # Interactive line chart
             fig_line = go.Figure()
             
-            for team in team_gw_points_melted['manager_team_name'].unique():
-                team_data = team_gw_points_melted[team_gw_points_melted['manager_team_name'] == team]
+            for team in team_gw_points_melted['team_name'].unique():
+                team_data = team_gw_points_melted[team_gw_points_melted['team_name'] == team]
                 fig_line.add_trace(go.Scatter(
-                    x=team_data['gw'],
+                    x=team_data['gameweek_num'],
                     y=team_data['points'],
                     mode='lines+markers',
                     name=team,
@@ -306,14 +306,14 @@ with tab3:
         if not team_gw_points_melted.empty:
             # Calculate cumulative points
             team_cumsum = team_gw_points_melted.copy()
-            team_cumsum['season_points'] = team_cumsum.groupby('manager_team_name')['points'].cumsum()
+            team_cumsum['season_points'] = team_cumsum.groupby('team_name')['points'].cumsum()
             
             fig_cumsum = go.Figure()
             
-            for team in team_cumsum['manager_team_name'].unique():
-                team_data = team_cumsum[team_cumsum['manager_team_name'] == team]
+            for team in team_cumsum['team_name'].unique():
+                team_data = team_cumsum[team_cumsum['team_name'] == team]
                 fig_cumsum.add_trace(go.Scatter(
-                    x=team_data['gw'],
+                    x=team_data['gameweek_num'],
                     y=team_data['season_points'],
                     mode='lines+markers',
                     name=team,

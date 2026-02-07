@@ -102,17 +102,17 @@ with tab1:
         filtered_df = df.copy()
         
         if owned_only:
-            filtered_df = filtered_df[filtered_df['manager_team_name'].notnull()]
+            filtered_df = filtered_df[filtered_df['team_name'].notnull()]
         
         if not_owned_only:
-            filtered_df = filtered_df[filtered_df['manager_team_name'].isnull()]
+            filtered_df = filtered_df[filtered_df['team_name'].isnull()]
         
         # Safe column selection - only select columns that exist
         available_cols = filtered_df.columns.tolist()
         
         # Try primary column set, fallback to available columns
-        primary_cols = ['manager_team_name', 'full_name', 'real_team', 'gw_points', 'gw', 'season_points',
-                       'gw_goals', 'gw_assists', 'gw_bonus', 'gw_minutes', 'gw_expected_goals', 'gw_expected_assists', 'position']
+        primary_cols = ['team_name', 'player_name', 'short_name', 'gw_points', 'gameweek_num', 'season_points',
+                       'gw_goals', 'gw_assists', 'gw_bonus', 'gw_minutes', 'gw_expected_goals', 'gw_expected_assists', 'player_position']
         
         # Filter to only columns that exist in the dataframe
         cols_to_use = [col for col in primary_cols if col in available_cols]
@@ -126,11 +126,11 @@ with tab1:
             
             # Build rename dictionary only for columns that exist
             rename_map = {
-                'manager_team_name': 'Manager', 
-                'full_name': 'Name', 
-                'real_team': 'Team', 
+                'team_name': 'Manager', 
+                'player_name': 'Name', 
+                'short_name': 'Team', 
                 'gw_points': 'GW Points', 
-                'gw': 'Gameweek', 
+                'gameweek_num': 'Gameweek', 
                 'season_points': 'Season Points', 
                 'gw_goals': 'GW Goals', 
                 'gw_assists': 'GW Assists', 
@@ -138,7 +138,7 @@ with tab1:
                 'gw_minutes': 'GW Minutes', 
                 'gw_expected_goals': 'GW xG', 
                 'gw_expected_assists': 'GW xA', 
-                'position': 'Position'
+                'player_position': 'Position'
             }
             rename_map = {k: v for k, v in rename_map.items() if k in filtered_df.columns}
             filtered_df.rename(columns=rename_map, inplace=True)

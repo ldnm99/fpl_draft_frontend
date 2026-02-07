@@ -245,13 +245,12 @@ def create_manager_standings(
         df = facts['manager_gw_performance'].copy()
         
         # Aggregate total points per manager
-        standings = df.groupby(['manager_id', 'first_name', 'last_name', 'manager_team_name']).agg({
+        standings = df.groupby(['manager_id', 'first_name', 'last_name', 'team_name']).agg({
             'gw_points': 'sum',
         }).reset_index()
         
         standings = standings.rename(columns={
             'gw_points': 'total_points',
-            'manager_team_name': 'team_name',
             'first_name': 'manager_first_name',
             'last_name': 'manager_last_name'
         })
@@ -277,12 +276,12 @@ def load_data_medallion(
     local_fixtures: str = "Data/fixtures.csv"
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Load data using medallion schema (Gold layer) with backward compatibility.
+    Load data using medallion schema (Gold layer).
     
     Returns same format as legacy load_data_supabase():
         (gw_data_df, standings_df, gameweeks_df, fixtures_df)
     
-    This function provides backward compatibility while using the new star schema.
+    Uses medallion schema column names (e.g., gameweek_num, player_name, gw_points).
     """
     logger.info("Loading data from medallion schema (Gold layer)...")
     
@@ -290,30 +289,12 @@ def load_data_medallion(
         # Load Gold layer
         dimensions, facts = load_gold_layer(supabase, bucket)
         
-        # Create denormalized views for backward compatibility
-        # For now, use the manager_gw_performance fact which already has player data joined
+        # Use manager_gw_performance fact which already has player data joined
         gw_data = facts['manager_gw_performance'].copy()
         
-        # Rename columns to match expected legacy format
-        gw_data = gw_data.rename(columns={
-            'gameweek_num': 'gw',
-            'player_position': 'position',
-            'player_name': 'full_name',
-            'short_name': 'Team',
-            'team_position': 'Role',
-            'gw_points': 'Points',
-            'gw_bonus': 'Bonus',
-            'gw_minutes': 'minutes',
-            'gw_goals': 'goals',
-            'gw_assists': 'assists',
-            'gw_clean_sheets': 'clean_sheets',
-        })
-        
-        # Add Player column (alias for full_name)
-        gw_data['Player'] = gw_data['full_name']
-        
-        # Add Position column (row index for sorting)
-        gw_data['Position'] = range(1, len(gw_data) + 1)
+        # Ensure position column exists for sorting/display
+        if 'position' not in gw_data.columns:
+            gw_data['player_position'] = range(1, len(gw_data) + 1)
         
         standings = create_manager_standings(dimensions, facts)
         
@@ -338,7 +319,7 @@ def load_data_medallion(
             # Fallback to dimension table
             fixtures = dimensions['fixtures'].copy()
         
-        logger.info("✅ Medallion data loaded successfully (backward compatible format)")
+        logger.info("✅ Medallion data loaded successfully with new column names")
         return gw_data, standings, gameweeks, fixtures
         
     except Exception as e:

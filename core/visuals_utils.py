@@ -204,7 +204,7 @@ def display_performance_trend(manager_name: str, df: pd.DataFrame):
     """Enhanced performance trend with comparisons and controls"""
     st.header("📈 Points Progression vs League", divider="rainbow")
     
-    manager_df = df[df['manager_team_name'] == manager_name]
+    manager_df = df[df['team_name'] == manager_name]
     starting_players = get_starting_lineup(manager_df)
     team_gw_points = calculate_team_gw_points(starting_players)
     
@@ -216,12 +216,12 @@ def display_performance_trend(manager_name: str, df: pd.DataFrame):
     
     # League average
     all_starting = get_starting_lineup(df)
-    all_team_gw_points = all_starting.groupby(['manager_team_name', 'gw'])['gw_points'].sum().reset_index()
-    other_teams = all_team_gw_points[all_team_gw_points['manager_team_name'] != manager_name]
-    league_avg = other_teams.groupby('gw')['gw_points'].mean().reset_index().rename(columns={'gw_points':'avg_points'})
+    all_team_gw_points = all_starting.groupby(['team_name', 'gameweek_num'])['gw_points'].sum().reset_index()
+    other_teams = all_team_gw_points[all_team_gw_points['team_name'] != manager_name]
+    league_avg = other_teams.groupby('gameweek_num')['gw_points'].mean().reset_index().rename(columns={'gw_points':'avg_points'})
     
-    comparison_df = manager_points.merge(league_avg, left_on='gameweek', right_on='gw', how='left')
-    comparison_df.drop(columns='gw', inplace=True)
+    comparison_df = manager_points.merge(league_avg, left_on='gameweek', right_on='gameweek_num', how='left')
+    comparison_df.drop(columns='gameweek_num', inplace=True)
     
     # Calculate statistics
     manager_avg = manager_points['manager_points'].mean()
@@ -334,18 +334,18 @@ def display_latest_gw(manager_df: pd.DataFrame):
     """Enhanced current gameweek display with better layout"""
     st.header("🎯 Latest Gameweek Lineup", divider="rainbow")
     
-    latest_gw = manager_df['gw'].max()
-    latest_gw_df = manager_df[manager_df['gw'] == latest_gw].sort_values('team_position').copy()
+    latest_gw = manager_df['gameweek_num'].max()
+    latest_gw_df = manager_df[manager_df['gameweek_num'] == latest_gw].sort_values('team_position').copy()
     
     if latest_gw_df.empty:
         st.info("📊 No data for latest gameweek yet.")
         return
     
     latest_gw_df = latest_gw_df.rename(columns={
-        'full_name': 'Player',
-        'real_team': 'Team',
+        'player_name': 'Player',
+        'short_name': 'Team',
         'team_position': 'Position',
-        'position': 'Role',
+        'player_position': 'Role',
         'gw_points': 'Points',
         'gw_bonus': 'Bonus'
     })
@@ -572,7 +572,7 @@ def display_player_progression(manager_df: pd.DataFrame):
     
     for player in selected_players:
         fig.add_trace(go.Scatter(
-            x=plot_data['gw'],
+            x=plot_data['gameweek_num'],
             y=plot_data[player],
             mode='lines+markers',
             name=player,
@@ -583,7 +583,7 @@ def display_player_progression(manager_df: pd.DataFrame):
     if show_total:
         totals = plot_data[selected_players].sum(axis=1)
         fig.add_trace(go.Scatter(
-            x=plot_data['gw'],
+            x=plot_data['gameweek_num'],
             y=totals,
             mode='lines',
             name='Total Selected',
@@ -818,7 +818,7 @@ def display_optimized_lineup(manager_df: pd.DataFrame):
         if not lineup_df.empty:
             # Format lineup display
             lineup_display = lineup_df[[
-                'full_name', 'real_team', 'position', 'gw_points', 'team_position'
+                'player_name', 'short_name', 'player_position', 'gw_points', 'team_position'
             ]].copy()
             lineup_display.columns = ['Player', 'Team', 'Position', 'Points', 'Squad Pos']
             lineup_display = lineup_display.sort_values('Points', ascending=False)
@@ -837,7 +837,7 @@ def display_optimized_lineup(manager_df: pd.DataFrame):
             
             with col_breakdown:
                 # Position breakdown
-                pos_breakdown = lineup_df['position'].value_counts().reset_index()
+                pos_breakdown = lineup_df['player_position'].value_counts().reset_index()
                 pos_breakdown.columns = ['Position', 'Count']
                 
                 fig = px.pie(
@@ -913,14 +913,14 @@ def display_player_clustering(df: pd.DataFrame):
         return
     
     # Filter out rows with missing critical data
-    df_clean = df.dropna(subset=['full_name', 'position', 'gw_points']).copy()
+    df_clean = df.dropna(subset=['player_name', 'player_position', 'gw_points']).copy()
     
     if df_clean.empty or len(df_clean) < 10:
         st.warning("⚠️ Insufficient player data for clustering analysis. Need at least 10 players with complete data.")
         return
     
     # Get unique positions
-    positions = sorted(df_clean['position'].unique())
+    positions = sorted(df_clean['player_position'].unique())
     
     col_select, col_info = st.columns([2, 1])
     
@@ -937,7 +937,7 @@ def display_player_clustering(df: pd.DataFrame):
     st.markdown("---")
     
     # Prepare data
-    analysis_df = df_clean if selected_position == "All Positions" else df_clean[df_clean['position'] == selected_position]
+    analysis_df = df_clean if selected_position == "All Positions" else df_clean[df_clean['player_position'] == selected_position]
     
     if len(analysis_df) < n_clusters:
         st.warning(f"⚠️ Not enough players ({len(analysis_df)}) for {n_clusters} clusters. Please reduce cluster count or select 'All Positions'.")
@@ -1077,14 +1077,14 @@ def display_player_trends(df: pd.DataFrame):
         return
     
     # Filter out rows with missing critical data
-    df_clean = df.dropna(subset=['full_name', 'gw_points', 'gw']).copy()
+    df_clean = df.dropna(subset=['player_name', 'gw_points', 'gameweek_num']).copy()
     
     if df_clean.empty:
         st.warning("⚠️ No valid player data available for trend analysis.")
         return
     
     # Player selection
-    players = sorted(df_clean['full_name'].unique())
+    players = sorted(df_clean['player_name'].unique())
     
     if not players:
         st.warning("⚠️ No players available for trend analysis.")
@@ -1137,7 +1137,7 @@ def display_player_trends(df: pd.DataFrame):
         
         # Actual points
         fig.add_trace(go.Scatter(
-            x=trend_df['gw'],
+            x=trend_df['gameweek_num'],
             y=trend_df['gw_points'],
             mode='lines+markers',
             name='Actual Points',
@@ -1148,7 +1148,7 @@ def display_player_trends(df: pd.DataFrame):
         # Trend line if selected
         if show_trend_line:
             fig.add_trace(go.Scatter(
-                x=trend_df['gw'],
+                x=trend_df['gameweek_num'],
                 y=trend_df['trend_line'],
                 mode='lines',
                 name='Trend Line',
@@ -1156,9 +1156,9 @@ def display_player_trends(df: pd.DataFrame):
             ))
         
         # Future prediction
-        future_gw = max(trend_df['gw']) + 1
+        future_gw = max(trend_df['gameweek_num']) + 1
         fig.add_trace(go.Scatter(
-            x=[max(trend_df['gw']), future_gw],
+            x=[max(trend_df['gameweek_num']), future_gw],
             y=[trend_df['trend_line'].iloc[-1], predicted_next],
             mode='lines+markers',
             name='Prediction',
@@ -1181,8 +1181,8 @@ def display_player_trends(df: pd.DataFrame):
         
         player_info = trend_df.iloc[0] if not trend_df.empty else {}
         
-        st.write(f"**Position:** {player_info.get('position', 'N/A')}")
-        st.write(f"**Team:** {player_info.get('real_team', 'N/A')}")
+        st.write(f"**Position:** {player_info.get('player_position', 'N/A')}")
+        st.write(f"**Team:** {player_info.get('short_name', 'N/A')}")
         
         st.divider()
         
@@ -1213,11 +1213,11 @@ def display_consistency_analysis(df: pd.DataFrame):
     # Position filter
     selected_position = st.selectbox(
         "Filter by Position",
-        options=["All Positions"] + sorted(consistency_df['position'].unique())
+        options=["All Positions"] + sorted(consistency_df['player_position'].unique())
     )
     
     if selected_position != "All Positions":
-        display_df = consistency_df[consistency_df['position'] == selected_position].copy()
+        display_df = consistency_df[consistency_df['player_position'] == selected_position].copy()
     else:
         display_df = consistency_df.copy()
     
@@ -1368,7 +1368,7 @@ def display_league_optimized_lineups(df: pd.DataFrame):
     # Calculate optimal points for each team
     results = []
     for team_name in actual_points_dict.keys():
-        team_df = df[df['manager_team_name'] == team_name].copy()
+        team_df = df[df['team_name'] == team_name].copy()
         
         if team_df.empty:
             continue
@@ -1461,12 +1461,12 @@ def display_injury_alerts(manager_df: pd.DataFrame):
             starting_at_risk = at_risk[at_risk['is_starting'] == True]
             if not starting_at_risk.empty:
                 st.error(f"🚨 **{len(starting_at_risk)} Starting XI players at risk!**")
-                display_cols = ['full_name', 'position', 'real_team', 'status', 'chance_of_playing', 'news']
+                display_cols = ['player_name', 'player_position', 'short_name', 'status', 'chance_of_playing', 'news']
                 at_risk_display = starting_at_risk[display_cols].copy()
                 at_risk_display.rename(columns={
-                    'full_name': 'Player',
-                    'position': 'Position',
-                    'real_team': 'Team',
+                    'player_name': 'Player',
+                    'player_position': 'Position',
+                    'short_name': 'Team',
                     'status': 'Status',
                     'chance_of_playing': 'Chance %',
                     'news': 'Update'
@@ -1477,12 +1477,12 @@ def display_injury_alerts(manager_df: pd.DataFrame):
             bench_at_risk = at_risk[at_risk['is_starting'] == False]
             if not bench_at_risk.empty:
                 with st.expander(f"📌 {len(bench_at_risk)} Bench players at risk"):
-                    display_cols = ['full_name', 'position', 'real_team', 'status', 'chance_of_playing', 'news']
+                    display_cols = ['player_name', 'player_position', 'short_name', 'status', 'chance_of_playing', 'news']
                     bench_display = bench_at_risk[display_cols].copy()
                     bench_display.rename(columns={
-                        'full_name': 'Player',
-                        'position': 'Position',
-                        'real_team': 'Team',
+                        'player_name': 'Player',
+                        'player_position': 'Position',
+                        'short_name': 'Team',
                         'status': 'Status',
                         'chance_of_playing': 'Chance %',
                         'news': 'Update'
@@ -1491,17 +1491,17 @@ def display_injury_alerts(manager_df: pd.DataFrame):
     
     with tab2:
         # Full squad status with color coding
-        display_cols = ['full_name', 'position', 'real_team', 'status', 'chance_of_playing', 'gw_points']
+        display_cols = ['player_name', 'player_position', 'short_name', 'status', 'chance_of_playing', 'gw_points']
         display_df = squad_status[display_cols].copy()
         display_df['Type'] = display_df.apply(
-            lambda x: '🔴 Starting' if x['real_team'] and squad_status.loc[display_df.index.get_loc(x.name), 'is_starting'] else '⚪ Bench',
+            lambda x: '🔴 Starting' if x['short_name'] and squad_status.loc[display_df.index.get_loc(x.name), 'is_starting'] else '⚪ Bench',
             axis=1
         )
         
         display_df.rename(columns={
-            'full_name': 'Player',
-            'position': 'Position',
-            'real_team': 'Team',
+            'player_name': 'Player',
+            'player_position': 'Position',
+            'short_name': 'Team',
             'status': 'Status',
             'chance_of_playing': 'Chance %',
             'gw_points': 'This GW'
