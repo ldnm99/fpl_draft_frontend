@@ -160,6 +160,11 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         
         # Build enhanced HTML with FPL styling
         html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             .pitch-container {{
                 position: relative;
@@ -308,7 +313,8 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 margin-top: 15px;
             }}
         </style>
-        
+        </head>
+        <body style="margin: 0; padding: 0; background: transparent;">
         <div class="pitch-container">
             <div class="formation-badge">Formation: {formation}</div>
             <div class="pitch-wrapper">
@@ -397,9 +403,12 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 🎮 Gameweek {int(latest_gw)}
             </div>
         </div>
+        </body>
+        </html>
         """
         
-        st.markdown(html_content, unsafe_allow_html=True)
+        # Use components.html for better rendering
+        components.html(html_content, height=1100, scrolling=False)
         
     except Exception as e:
         st.error(f"Error displaying pitch: {str(e)}")
