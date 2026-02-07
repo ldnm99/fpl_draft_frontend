@@ -271,6 +271,11 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         starting_xi = squad_df[squad_df['team_position'] <= 11].copy()
         bench = squad_df[squad_df['team_position'] > 11].copy()
         
+        # Debug: Check bench data
+        st.write(f"Debug: Starting XI count: {len(starting_xi)}, Bench count: {len(bench)}")
+        if not bench.empty:
+            st.write(f"Debug: Bench positions: {bench['team_position'].tolist()}")
+        
         # Detect formation
         formation = detect_formation(starting_xi)
         position_coords = get_formation_positions(formation)
