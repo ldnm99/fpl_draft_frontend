@@ -173,9 +173,86 @@ def display_squad_pitch(manager_df: pd.DataFrame):
     st.header("⚽ Squad on the Pitch", divider="rainbow")
     
     try:
-        # Get latest gameweek
-        latest_gw = manager_df['gameweek_num'].max()
-        squad_df = manager_df[manager_df['gameweek_num'] == latest_gw].copy()
+        # Initialize session state for selected gameweek
+        if 'selected_gw_pitch' not in st.session_state:
+            st.session_state.selected_gw_pitch = manager_df['gameweek_num'].max()
+        
+        # Get available gameweeks
+        available_gws = sorted(manager_df['gameweek_num'].unique())
+        min_gw = min(available_gws)
+        max_gw = max(available_gws)
+        
+        # FPL-style gameweek pager
+        st.markdown("""
+        <style>
+            .stButton > button {
+                background: linear-gradient(135deg, #37003c 0%, #2d0032 100%);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                font-weight: 600;
+                font-size: 14px;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+            .stButton > button:hover:not(:disabled) {
+                background: linear-gradient(135deg, #4a0050 0%, #37003c 100%);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            .stButton > button:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+            .gw-heading-container {
+                text-align: center;
+                padding: 12px;
+                background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+                border-radius: 6px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+            .gw-heading-text {
+                color: #37003c;
+                font-size: 20px;
+                font-weight: 700;
+                margin: 0;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Create pager layout
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col1:
+            prev_disabled = st.session_state.selected_gw_pitch <= min_gw
+            if st.button("◀ Previous", key="prev_gw_pitch", use_container_width=True, 
+                        disabled=prev_disabled):
+                current_idx = available_gws.index(st.session_state.selected_gw_pitch)
+                if current_idx > 0:
+                    st.session_state.selected_gw_pitch = available_gws[current_idx - 1]
+                    st.rerun()
+        
+        with col2:
+            st.markdown(f"""
+            <div class="gw-heading-container">
+                <h3 class="gw-heading-text">Gameweek {int(st.session_state.selected_gw_pitch)}</h3>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            next_disabled = st.session_state.selected_gw_pitch >= max_gw
+            if st.button("Next ▶", key="next_gw_pitch", use_container_width=True,
+                        disabled=next_disabled):
+                current_idx = available_gws.index(st.session_state.selected_gw_pitch)
+                if current_idx < len(available_gws) - 1:
+                    st.session_state.selected_gw_pitch = available_gws[current_idx + 1]
+                    st.rerun()
+        
+        # Get squad for selected gameweek
+        selected_gw = st.session_state.selected_gw_pitch
+        squad_df = manager_df[manager_df['gameweek_num'] == selected_gw].copy()
         
         if squad_df.empty:
             st.error("ERROR: No squad data for current gameweek.")
@@ -408,7 +485,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
             <div class="points-scoreboard">
                 <h4 class="points-heading">Gameweek Points</h4>
                 <div class="points-value">{total_gw_points}</div>
-                <div class="points-label">Total Points GW {int(latest_gw)}</div>
+                <div class="points-label">Total Points GW {int(selected_gw)}</div>
             </div>
             <div class="formation-badge">Formation: {formation}</div>
             <div class="pitch-wrapper">
@@ -503,7 +580,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         # Add gameweek badge
         html_content += f"""
             <div class="gameweek-badge">
-                🎮 Gameweek {int(latest_gw)}
+                🎮 Gameweek {int(selected_gw)}
             </div>
         </div>
         </body>
