@@ -61,8 +61,21 @@ def load_data_auto(
     )
 
 
-# Legacy loader removed - now only using medallion schema
-# If you need the old loader, check git history
+# ============================================================
+#                   BACKWARD COMPATIBILITY
+# ============================================================
+def load_data_supabase(
+    supabase,
+    bucket="data",
+    local_gameweeks="Data/gameweeks.csv",
+    local_fixtures="Data/fixtures.csv"
+):
+    """
+    DEPRECATED: Use load_data_auto() instead.
+    This is a compatibility wrapper that calls load_data_auto().
+    """
+    logger.warning("load_data_supabase() is deprecated. Use load_data_auto() instead.")
+    return load_data_auto(supabase, bucket, local_gameweeks, local_fixtures)
 
 
 # ============================================================
