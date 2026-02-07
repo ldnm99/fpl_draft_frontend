@@ -1,5 +1,5 @@
 # ============================================================
-#       SQUAD PITCH VISUALIZATION
+#       ENHANCED SQUAD PITCH VISUALIZATION (FPL Style)
 # ============================================================
 
 import pandas as pd
@@ -43,8 +43,11 @@ def get_player_kit_image(team_name: str) -> Image.Image:
 
 def get_image_base64(image_path):
     """Convert image to base64"""
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except:
+        return None
 
 
 def get_kit_base64(team_name):
@@ -60,8 +63,74 @@ def get_kit_base64(team_name):
     return None
 
 
+def get_formation_positions(formation: str = "4-4-2"):
+    """
+    Get player positions based on formation.
+    Returns coordinates as percentage of pitch dimensions.
+    """
+    formations = {
+        "4-4-2": {
+            'GK': [(50, 5)],
+            'DEF': [(20, 20), (40, 18), (60, 18), (80, 20)],
+            'MID': [(20, 45), (40, 48), (60, 48), (80, 45)],
+            'FWD': [(35, 75), (65, 75)]
+        },
+        "3-5-2": {
+            'GK': [(50, 5)],
+            'DEF': [(25, 18), (50, 16), (75, 18)],
+            'MID': [(15, 40), (30, 48), (50, 50), (70, 48), (85, 40)],
+            'FWD': [(35, 75), (65, 75)]
+        },
+        "3-4-3": {
+            'GK': [(50, 5)],
+            'DEF': [(25, 18), (50, 16), (75, 18)],
+            'MID': [(20, 45), (40, 48), (60, 48), (80, 45)],
+            'FWD': [(25, 75), (50, 78), (75, 75)]
+        },
+        "4-3-3": {
+            'GK': [(50, 5)],
+            'DEF': [(20, 20), (40, 18), (60, 18), (80, 20)],
+            'MID': [(25, 48), (50, 50), (75, 48)],
+            'FWD': [(25, 75), (50, 78), (75, 75)]
+        },
+        "4-5-1": {
+            'GK': [(50, 5)],
+            'DEF': [(20, 20), (40, 18), (60, 18), (80, 20)],
+            'MID': [(15, 40), (30, 48), (50, 50), (70, 48), (85, 40)],
+            'FWD': [(50, 78)]
+        },
+        "5-4-1": {
+            'GK': [(50, 5)],
+            'DEF': [(15, 20), (30, 18), (50, 16), (70, 18), (85, 20)],
+            'MID': [(20, 48), (40, 50), (60, 50), (80, 48)],
+            'FWD': [(50, 78)]
+        },
+        "5-3-2": {
+            'GK': [(50, 5)],
+            'DEF': [(15, 20), (30, 18), (50, 16), (70, 18), (85, 20)],
+            'MID': [(25, 50), (50, 52), (75, 50)],
+            'FWD': [(35, 75), (65, 75)]
+        }
+    }
+    
+    return formations.get(formation, formations["4-4-2"])
+
+
+def detect_formation(starting_xi: pd.DataFrame) -> str:
+    """Detect formation based on number of players in each position."""
+    position_counts = starting_xi['player_position'].value_counts()
+    
+    gk = position_counts.get('GK', 0)
+    def_count = position_counts.get('DEF', 0)
+    mid = position_counts.get('MID', 0)
+    fwd = position_counts.get('FWD', 0)
+    
+    formation = f"{def_count}-{mid}-{fwd}"
+    return formation
+
+
 def display_squad_pitch(manager_df: pd.DataFrame):
-    """Display squad overlaid on pitch with kit images positioned by role"""
+    """Display squad on pitch with FPL-style design"""
     st.header("⚽ Squad on the Pitch", divider="rainbow")
     
     try:
@@ -77,88 +146,258 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         assets_path = get_assets_path()
         pitch_path = os.path.join(assets_path, "fpl_pitch.jpg")
         
-        if not os.path.exists(pitch_path):
-            st.error("Pitch background not found")
-            return
+        pitch_bg_base64 = None
+        if os.path.exists(pitch_path):
+            pitch_bg_base64 = get_image_base64(pitch_path)
         
         # Separate starting XI and bench
         starting_xi = squad_df[squad_df['team_position'] <= 11].copy()
         bench = squad_df[squad_df['team_position'] > 11].copy()
         
-        # Position coordinates on pitch (as percentage of image width/height)
-        position_coords = {
-            'GK': [(50, 8)],
-            'DEF': [(15, 25), (35, 22), (50, 20), (65, 22), (85, 25)],
-            'MID': [(20, 45), (35, 48), (50, 50), (65, 48), (80, 45)],
-            'FWD': [(30, 70), (50, 72), (70, 70)],
-        }
+        # Detect formation
+        formation = detect_formation(starting_xi)
+        position_coords = get_formation_positions(formation)
         
-        # Build HTML with overlay
+        # Build enhanced HTML with FPL styling
         html_content = f"""
-        <div style="position: relative; width: 100%; display: inline-block;">
-            <img src="data:image/jpeg;base64,{get_image_base64(pitch_path)}" style="width: 100%; display: block;">
+        <style>
+            .pitch-container {{
+                position: relative;
+                width: 100%;
+                max-width: 800px;
+                margin: 0 auto;
+                background: linear-gradient(to bottom, #37003c 0%, #37003c 100%);
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            }}
+            
+            .pitch-wrapper {{
+                position: relative;
+                width: 100%;
+                padding-bottom: 130%; /* Aspect ratio for vertical pitch */
+                background: {f'url(data:image/jpeg;base64,{pitch_bg_base64})' if pitch_bg_base64 else 'linear-gradient(180deg, #5eb84d 0%, #63b852 50%, #5eb84d 100%)'};
+                background-size: cover;
+                background-position: center;
+                border-radius: 4px;
+                overflow: hidden;
+            }}
+            
+            .pitch-field {{
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }}
+            
+            .player-element {{
+                position: absolute;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                cursor: pointer;
+                transition: transform 0.2s;
+            }}
+            
+            .player-element:hover {{
+                transform: translate(-50%, -50%) scale(1.1);
+                z-index: 100;
+            }}
+            
+            .player-shirt {{
+                width: 50px;
+                height: 66px;
+                object-fit: contain;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                margin-bottom: 4px;
+            }}
+            
+            .player-name {{
+                background: rgba(0, 0, 0, 0.85);
+                color: white;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+                white-space: nowrap;
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin: 0 auto 2px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }}
+            
+            .player-points {{
+                background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+                color: #000;
+                padding: 3px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 700;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                display: inline-block;
+            }}
+            
+            .player-points.negative {{
+                background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+                color: white;
+            }}
+            
+            .player-points.zero {{
+                background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+                color: white;
+            }}
+            
+            .bench-section {{
+                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                padding: 20px;
+                margin-top: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }}
+            
+            .bench-title {{
+                color: #fff;
+                font-weight: 700;
+                font-size: 14px;
+                margin-bottom: 15px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }}
+            
+            .bench-players {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                justify-content: center;
+            }}
+            
+            .bench-player {{
+                text-align: center;
+                transition: transform 0.2s;
+            }}
+            
+            .bench-player:hover {{
+                transform: scale(1.05);
+            }}
+            
+            .bench-shirt {{
+                width: 45px;
+                height: 60px;
+                object-fit: contain;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                margin-bottom: 4px;
+            }}
+            
+            .formation-badge {{
+                background: rgba(255,255,255,0.2);
+                color: white;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 600;
+                display: inline-block;
+                margin-bottom: 15px;
+                backdrop-filter: blur(10px);
+            }}
+            
+            .gameweek-badge {{
+                color: rgba(255,255,255,0.8);
+                font-size: 12px;
+                text-align: center;
+                margin-top: 15px;
+            }}
+        </style>
+        
+        <div class="pitch-container">
+            <div class="formation-badge">Formation: {formation}</div>
+            <div class="pitch-wrapper">
+                <div class="pitch-field">
         """
         
-        # Add starting XI overlays
+        # Add starting XI players
         for pos in ['GK', 'DEF', 'MID', 'FWD']:
-            players = starting_xi[starting_xi['player_position'] == pos].sort_values('player_name')
+            players = starting_xi[starting_xi['player_position'] == pos].sort_values('team_position')
             coords = position_coords.get(pos, [])
             
             for idx, (_, player) in enumerate(players.iterrows()):
                 if idx < len(coords):
                     x_pct, y_pct = coords[idx]
-                    points = int(player['gw_points'])
-                    color = "#2ecc71" if points > 0 else "#e74c3c"
+                    points = player['gw_points']
+                    
+                    # Determine points class
+                    if points > 0:
+                        points_class = ""
+                    elif points == 0:
+                        points_class = "zero"
+                    else:
+                        points_class = "negative"
                     
                     # Get kit image
                     kit_base64 = get_kit_base64(player['short_name'])
-                    kit_html = f'<img src="data:image/png;base64,{kit_base64}" style="width: 60px; height: 80px; object-fit: cover; border-radius: 3px;">' if kit_base64 else '<div style="width: 60px; height: 80px; background: #ccc; display: flex; align-items: center; justify-content: center; border-radius: 3px;">🎽</div>'
+                    
+                    if kit_base64:
+                        shirt_html = f'<img src="data:image/png;base64,{kit_base64}" class="player-shirt" alt="{player["short_name"]}">'
+                    else:
+                        shirt_html = f'<div class="player-shirt" style="background: #667eea; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">⚽</div>'
+                    
+                    player_name = str(player['player_name']).split()[-1] if len(str(player['player_name']).split()) > 1 else str(player['player_name'])
                     
                     html_content += f"""
-                    <div style="position: absolute; left: {x_pct}%; top: {y_pct}%; transform: translate(-50%, -50%); text-align: center;">
-                        {kit_html}
-                        <div style="background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; margin-top: 3px; border-radius: 3px; font-size: 10px; font-weight: bold; white-space: nowrap; width: 70px; overflow: hidden; text-overflow: ellipsis;">
-                            {player['player_name'][:12]}
-                        </div>
-                        <div style="background: {color}; color: white; padding: 2px 6px; margin-top: 1px; border-radius: 3px; font-size: 9px; font-weight: bold;">
-                            {points}
-                        </div>
+                    <div class="player-element" style="left: {x_pct}%; top: {y_pct}%;">
+                        {shirt_html}
+                        <div class="player-name">{player_name[:12]}</div>
+                        <div class="player-points {points_class}">{int(points)}</div>
                     </div>
                     """
         
-        # Close pitch container and add bench section
+        # Close pitch field
         html_content += """
-        </div>
-        <div style="background: #2d5016; padding: 15px; margin-top: 10px; border-radius: 5px;">
-            <div style="color: white; font-weight: bold; margin-bottom: 10px;">Bench:</div>
-            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                </div>
+            </div>
         """
         
-        for _, player in bench.iterrows():
-            points = int(player['gw_points'])
-            color = "#2ecc71" if points > 0 else "#e74c3c"
-            kit_base64 = get_kit_base64(player['short_name'])
-            kit_html = f'<img src="data:image/png;base64,{kit_base64}" style="width: 50px; height: 70px; object-fit: cover; border-radius: 2px;">' if kit_base64 else '<div style="width: 50px; height: 70px; background: #ccc; display: flex; align-items: center; justify-content: center; border-radius: 2px;">🎽</div>'
+        # Add bench section
+        if not bench.empty:
+            html_content += """
+            <div class="bench-section">
+                <div class="bench-title">⬇️ Bench</div>
+                <div class="bench-players">
+            """
             
-            html_content += f"""
-            <div style="text-align: center;">
-                {kit_html}
-                <div style="background: rgba(0,0,0,0.8); color: white; padding: 2px 4px; margin-top: 3px; border-radius: 2px; font-size: 9px; font-weight: bold; white-space: nowrap; width: 60px; overflow: hidden; text-overflow: ellipsis;">
-                    {player['player_name'][:10]}
+            for _, player in bench.iterrows():
+                points = player['gw_points']
+                points_class = "" if points > 0 else ("zero" if points == 0 else "negative")
+                
+                kit_base64 = get_kit_base64(player['short_name'])
+                
+                if kit_base64:
+                    shirt_html = f'<img src="data:image/png;base64,{kit_base64}" class="bench-shirt" alt="{player["short_name"]}">'
+                else:
+                    shirt_html = f'<div class="bench-shirt" style="background: #95a5a6; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">⚽</div>'
+                
+                player_name = str(player['player_name']).split()[-1] if len(str(player['player_name']).split()) > 1 else str(player['player_name'])
+                
+                html_content += f"""
+                <div class="bench-player">
+                    {shirt_html}
+                    <div class="player-name">{player_name[:10]}</div>
+                    <div class="player-points {points_class}">{int(points)}</div>
                 </div>
-                <div style="background: {color}; color: white; padding: 2px 4px; margin-top: 1px; border-radius: 2px; font-size: 8px; font-weight: bold;">
-                    {points}
+                """
+            
+            html_content += """
                 </div>
             </div>
             """
         
-        html_content += """
+        # Add gameweek badge
+        html_content += f"""
+            <div class="gameweek-badge">
+                🎮 Gameweek {int(latest_gw)}
             </div>
         </div>
-        <div style="color: #999; font-size: 12px; margin-top: 10px; text-align: center;">
-            🎮 Gameweek {gw} - Kit images show player's real team
-        </div>
-        """.format(gw=int(latest_gw))
+        """
         
         st.markdown(html_content, unsafe_allow_html=True)
         
