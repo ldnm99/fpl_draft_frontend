@@ -21,6 +21,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026-02-07
+
+### Added - Medallion Architecture Migration
+- **NEW:** `core/medallion_data_loader.py` - Loads data from Gold layer (star schema)
+  - Functions: `load_gold_layer()`, `load_dimensions()`, `load_facts()`
+  - Creates backward-compatible views
+  - 300+ lines of comprehensive data loading logic
+- **Documentation:** `docs/MEDALLION_MIGRATION.md` - Complete migration guide
+- **Documentation:** `docs/MEDALLION_QUICK_REF.md` - Quick reference for developers
+
+### Enhanced - Pitch Visualization (FPL Style)
+- Larger player cards (kit images 40% bigger: 70x92px)
+- Fixture display showing opponent and home/away status (e.g., "WOL (A)")
+- FPL-style design with modern gradients
+- Dynamic formation detection (supports 7 formations)
+- Enhanced player cards with hover animations
+- Color-coded points badges (green/gray/red gradients)
+
+### Changed - Column Name Refactoring
+- Refactored all legacy column names to medallion schema
+- `gw` → `gameweek_num`
+- `position` → `player_position`
+- `full_name` → `player_name`
+- `real_team` → `short_name`
+- `manager_team_name` → `team_name`
+- Updated 180+ column references across 11 files
+- All core modules, pages, and utilities updated
+
+### Fixed - Backend Compatibility
+- Added column normalization layer for backend-frontend compatibility
+- Frontend now handles both old and new backend column names
+- Dynamic column detection in manager standings
+- Zero breaking changes during migration
+
+### Fixed - Data Refresh System
+- Added session state reload counter
+- New "🔄 Refresh Data" button (primary action)
+- Clear cache on refresh: `st.cache_data.clear()`
+- ETL pipeline button now triggers cache clear
+- Shows refresh count for transparency
+
+### Fixed - Visualization Issues
+- Fixed pie chart position distribution (line 153)
+- Fixed scatter plot player clustering hover data (line 993)
+- Fixed DataFrame column selection in cluster display (line 1013)
+- All charts now use medallion column names
+
+### Files Modified
+- `core/data_utils.py` - Added `load_data_auto()` with fallback
+- `core/visuals_utils.py` - Updated 60+ column references
+- `core/medallion_data_loader.py` - NEW file
+- `core/pitch_visualization.py` - Enhanced FPL-style design
+- `menu.py` - Added refresh button and reload counter
+- `pages/*.py` - Updated all page files (11 files total)
+
+### Migration
+- Frontend now perfectly aligned with backend ETL medallion schema
+- Backward compatibility maintained during transition
+- No breaking changes to functionality
+- All tests passing
+
+---
+
 ## [1.0.0] - 2026-01-24
 
 ### Added

@@ -1,26 +1,35 @@
 # 📚 Documentation Overview
 
-Welcome! This directory now contains comprehensive documentation for the **FPL Draft Dashboard** project.
+Welcome! This directory contains comprehensive documentation for the **FPL Draft Dashboard** project.
+
+## 🚀 Quick Start
+
+**New here?** Start with the [main README](../README.md) in the project root for a quick overview, then return here for detailed documentation.
 
 ## 📖 Documentation Structure
 
 ### For Users & Setup
 
-1. **[README.md](README.md)** ⭐ **START HERE**
+1. **[../README.md](../README.md)** ⭐ **START HERE**
    - Project overview and features
-   - Quick start guide (5 minutes)
-   - Key functions overview
-   - Data flow explanation
-   - Where to find help
+   - Quick installation (5 minutes)
+   - Recent updates (v2.0.0)
+   - Troubleshooting basics
 
-2. **[SETUP.md](SETUP.md)** - Detailed Setup Guide
+2. **[README.md](README.md)** - Detailed Documentation
+   - Extended project documentation
+   - Complete feature list
+   - Data schema details
+   - Advanced examples
+
+3. **[SETUP.md](SETUP.md)** - Detailed Setup Guide
    - Step-by-step local installation
    - Streamlit Cloud deployment
    - Configuration management
    - Comprehensive troubleshooting
    - Advanced configuration options
 
-3. **[QUICKREF.md](QUICKREF.md)** - Quick Reference
+4. **[QUICKREF.md](QUICKREF.md)** - Quick Reference
    - Fast lookup for common tasks
    - Essential commands
    - Code snippets
@@ -29,7 +38,7 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 
 ### For Developers
 
-4. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical Design
+5. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical Design
    - System architecture diagram
    - Module descriptions
    - Data models and schemas
@@ -38,14 +47,25 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
    - Caching strategy
    - Future improvements
 
-5. **[API_REFERENCE.md](API_REFERENCE.md)** - Function Documentation
+6. **[MEDALLION_MIGRATION.md](MEDALLION_MIGRATION.md)** - Medallion Architecture Guide
+   - Gold layer schema
+   - Migration process
+   - Star schema design
+   - Performance benefits
+
+7. **[MEDALLION_QUICK_REF.md](MEDALLION_QUICK_REF.md)** - Medallion Quick Reference
+   - Common queries
+   - Schema reference
+   - Code examples
+
+8. **[API_REFERENCE.md](API_REFERENCE.md)** - Function Documentation
    - Complete function reference
    - Parameter descriptions
    - Return types and examples
    - Error handling
    - Data type reference
 
-6. **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution Guide
+9. **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution Guide
    - Development workflow
    - Code style standards
    - Testing guidelines
@@ -55,7 +75,7 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 
 ### Project Info
 
-7. **[CHANGELOG.md](CHANGELOG.md)** - Version History
+10. **[CHANGELOG.md](CHANGELOG.md)** - Version History
    - Release notes
    - Version timeline
    - Migration guides
@@ -78,13 +98,13 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 ### I want to...
 
 **Get started**
-→ Read [README.md](README.md) then [SETUP.md](SETUP.md)
+→ Read [main README](../README.md) then [SETUP.md](SETUP.md)
 
 **Deploy to Streamlit Cloud**
 → Go to [SETUP.md - Streamlit Cloud Deployment](SETUP.md#streamlit-cloud-deployment)
 
 **Understand the code structure**
-→ Read [ARCHITECTURE.md](ARCHITECTURE.md)
+→ Read [ARCHITECTURE.md](ARCHITECTURE.md) and [MEDALLION_MIGRATION.md](MEDALLION_MIGRATION.md)
 
 **Use a specific function**
 → Check [API_REFERENCE.md](API_REFERENCE.md)
@@ -103,20 +123,22 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 
 ---
 
-## 📊 File Size Summary
+## 📊 Documentation Files
 
-| File | Size | Purpose |
-|------|------|---------|
-| README.md | 7.7 KB | Main entry point |
-| ARCHITECTURE.md | 15.9 KB | Technical design |
-| SETUP.md | 14.4 KB | Setup & deployment |
-| API_REFERENCE.md | 14.8 KB | Function docs |
-| CONTRIBUTING.md | 11.2 KB | Contributing guide |
-| QUICKREF.md | 10.4 KB | Quick lookup |
-| CHANGELOG.md | 3.5 KB | Version history |
-| .env.example | 0.5 KB | Config template |
-| .gitignore | 0.7 KB | Git ignore rules |
-| **Total** | **~79 KB** | **Complete docs** |
+| File | Purpose |
+|------|---------|
+| ../README.md | Quick start (project root) ⭐ |
+| README.md | Detailed documentation |
+| ARCHITECTURE.md | Technical design |
+| MEDALLION_MIGRATION.md | Medallion architecture guide |
+| MEDALLION_QUICK_REF.md | Medallion quick reference |
+| SETUP.md | Setup & deployment |
+| API_REFERENCE.md | Function reference |
+| CONTRIBUTING.md | Contributing guide |
+| QUICKREF.md | Quick lookup |
+| CHANGELOG.md | Version history |
+| DOCS_INDEX.md | This file |
+| ERROR_HANDLING.md | Error handling guide |
 
 ---
 
@@ -124,7 +146,8 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 
 ### What's Covered
 
-✅ **Project Overview** - What it is and what it does  
+✅ **Project Overview** - Quick start in root README  
+✅ **Medallion Architecture** - Gold layer schema and migration  
 ✅ **Setup Instructions** - Local and cloud deployment  
 ✅ **Architecture** - How the code is organized  
 ✅ **API Reference** - Every function documented  
@@ -132,7 +155,7 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 ✅ **Contributing** - How to contribute code  
 ✅ **Quick Reference** - Fast lookup guide  
 ✅ **Configuration** - Environment and config templates  
-✅ **Version History** - Release notes and updates  
+✅ **Version History** - Release notes and updates (v2.0.0)
 
 ### Documentation Quality
 
@@ -146,7 +169,7 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 
 ## 🚀 Getting Started in 5 Minutes
 
-1. **Read** [README.md](README.md) (2 min)
+1. **Read** [main README](../README.md) (2 min) ⭐
 2. **Follow** [SETUP.md - Local Development Setup](SETUP.md#local-development-setup) (3 min)
 3. **Run** the app:
    ```bash
@@ -159,15 +182,16 @@ Welcome! This directory now contains comprehensive documentation for the **FPL D
 ## 📚 Learning Path by Role
 
 ### For End Users
-1. [README.md](README.md) - Overview
+1. [main README](../README.md) - Quick start ⭐
 2. [SETUP.md - Local Development](SETUP.md#local-development-setup) - Installation
 3. [SETUP.md - Deployment](SETUP.md#streamlit-cloud-deployment) - Going live
 
 ### For Developers
-1. [README.md](README.md) - Overview
+1. [main README](../README.md) - Overview ⭐
 2. [ARCHITECTURE.md](ARCHITECTURE.md) - Technical design
-3. [API_REFERENCE.md](API_REFERENCE.md) - Function reference
-4. [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
+3. [MEDALLION_MIGRATION.md](MEDALLION_MIGRATION.md) - Medallion architecture
+4. [API_REFERENCE.md](API_REFERENCE.md) - Function reference
+5. [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
 
 ### For DevOps
 1. [SETUP.md](SETUP.md) - Setup guide
@@ -265,13 +289,17 @@ After following the setup guide:
 
 | File | Status | Last Updated |
 |------|--------|--------------|
-| README.md | ✅ Complete | 2026-01-24 |
+| ../README.md (root) | ✅ Complete | 2026-02-07 |
+| README.md | ✅ Complete | 2026-02-07 |
+| MEDALLION_MIGRATION.md | ✅ Complete | 2026-02-07 |
+| MEDALLION_QUICK_REF.md | ✅ Complete | 2026-02-07 |
+| CHANGELOG.md | ✅ Complete | 2026-02-07 |
 | SETUP.md | ✅ Complete | 2026-01-24 |
 | ARCHITECTURE.md | ✅ Complete | 2026-01-24 |
 | API_REFERENCE.md | ✅ Complete | 2026-01-24 |
 | CONTRIBUTING.md | ✅ Complete | 2026-01-24 |
-| CHANGELOG.md | ✅ Complete | 2026-01-24 |
 | QUICKREF.md | ✅ Complete | 2026-01-24 |
+| DOCS_INDEX.md | ✅ Complete | 2026-02-07 |
 
 ---
 
@@ -288,9 +316,9 @@ Have suggestions for improving documentation?
 
 **🙌 Thank you for exploring the FPL Draft Dashboard!**
 
-**Start with [README.md](README.md) → [SETUP.md](SETUP.md) → Enjoy!**
+**Start with [main README](../README.md) → [SETUP.md](SETUP.md) → Enjoy!**
 
 ---
 
-*Documentation Version: 1.0.0*  
-*Last Updated: January 24, 2026*
+*Documentation Version: 2.0.0*  
+*Last Updated: February 7, 2026*

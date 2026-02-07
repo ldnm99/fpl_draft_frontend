@@ -6,57 +6,61 @@ The FPL Dashboard project is organized into logical folders for maintainability 
 
 ```
 FPL_frontend/
-├── menu.py                    # Main entry point (Streamlit app)
-├── requirements.txt           # Python dependencies
-├── .env                       # Environment variables (local development)
-├── .env.example              # Environment template
-├── .gitignore                # Git ignore rules
-├── pyproject.toml            # Python project config (future)
+├── README.md                 # Project overview (start here!)
+├── menu.py                   # Main entry point (Streamlit app)
+├── requirements.txt          # Python dependencies
+├── .env.example             # Environment template
+├── .gitignore               # Git ignore rules
 │
-├── config/                   # Configuration modules
+├── config/                  # Configuration modules
 │   ├── __init__.py
-│   └── supabase_client.py   # Supabase client initialization
+│   └── supabase_client.py  # Supabase client initialization
 │
-├── core/                     # Core application logic
+├── core/                    # Core application logic
 │   ├── __init__.py
-│   ├── data_utils.py        # Data loading & processing
-│   ├── visuals_utils.py     # Visualizations & charts
-│   └── error_handler.py     # Error handling & logging
+│   ├── medallion_data_loader.py  # Gold layer data loader (NEW v2.0)
+│   ├── data_utils.py       # Data loading & processing
+│   ├── visuals_utils.py    # Visualizations & charts
+│   ├── pitch_visualization.py  # FPL-style pitch display
+│   ├── injury_utils.py     # Injury tracking
+│   └── error_handler.py    # Error handling & logging
 │
-├── pages/                    # Streamlit page scripts
-│   ├── Overall.py           # League overview dashboard
-│   ├── Current Gameweek.py  # Current gameweek details
-│   ├── Fixtures.py          # Upcoming fixtures
-│   ├── Players Data.py      # Player analysis
-│   └── [Manager].py         # Individual manager dashboards
+├── pages/                   # Streamlit page scripts
+│   ├── Overall.py          # League overview dashboard
+│   ├── Current Gameweek.py # Current gameweek details
+│   ├── Fixtures.py         # Upcoming fixtures
+│   ├── Players Data.py     # Player analysis
+│   └── [Manager].py        # Individual manager dashboards
 │
-├── utils/                    # Utility modules (future)
+├── utils/                   # Utility modules
 │   └── __init__.py
 │
-├── tests/                    # Test suite (future)
+├── tests/                   # Test suite
 │   ├── __init__.py
 │   ├── test_data_utils.py
 │   └── test_error_handler.py
 │
-├── Data/                     # Local data files
-│   ├── gameweeks.csv        # Gameweek schedule
-│   └── fixtures.csv         # Match fixtures
+├── Data/                    # Local data files
+│   ├── gameweeks.csv       # Gameweek schedule
+│   └── fixtures.csv        # Match fixtures
 │
-├── docs/                     # Documentation
-│   ├── README.md            # Project overview
-│   ├── SETUP.md             # Setup & deployment guide
-│   ├── ARCHITECTURE.md      # Technical design
-│   ├── API_REFERENCE.md     # Function documentation
-│   ├── CONTRIBUTING.md      # Contribution guidelines
-│   ├── ERROR_HANDLING.md    # Error handling guide
-│   ├── CHANGELOG.md         # Version history
-│   ├── QUICKREF.md          # Quick reference
-│   └── DOCS_INDEX.md        # Documentation index
+├── docs/                    # Documentation
+│   ├── README.md           # Detailed project documentation
+│   ├── SETUP.md            # Setup & deployment guide
+│   ├── ARCHITECTURE.md     # Technical design
+│   ├── MEDALLION_MIGRATION.md  # Medallion architecture guide
+│   ├── MEDALLION_QUICK_REF.md  # Quick reference
+│   ├── API_REFERENCE.md    # Function documentation
+│   ├── CONTRIBUTING.md     # Contribution guidelines
+│   ├── ERROR_HANDLING.md   # Error handling guide
+│   ├── CHANGELOG.md        # Version history
+│   ├── QUICKREF.md         # Quick reference
+│   └── DOCS_INDEX.md       # Documentation index
 │
-├── assets/                   # Static files
+├── assets/                  # Static files
 │   └── [images, logos, etc.]
 │
-└── .devcontainer/           # Dev container config
+└── .devcontainer/          # Dev container config
     └── devcontainer.json
 ```
 
@@ -381,5 +385,17 @@ This structure provides:
 
 ---
 
-**Last Updated:** January 24, 2026  
-**Version:** 1.0.0
+## What's New in v2.0.0 (Feb 2026)
+
+✅ **Medallion Architecture** - Gold layer integration with star schema  
+✅ **Enhanced Visualizations** - FPL-style pitch display  
+✅ **Column Refactoring** - 180+ updates for consistency  
+✅ **Data Refresh System** - Manual refresh and cache clearing  
+✅ **Better Documentation** - Root README.md and updated guides  
+
+See [CHANGELOG.md](docs/CHANGELOG.md) for full details.
+
+---
+
+**Last Updated:** February 7, 2026  
+**Version:** 2.0.0

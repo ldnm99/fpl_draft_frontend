@@ -1,14 +1,18 @@
-# ⚽ FPL Draft Dashboard
+# ⚽ FPL Draft Dashboard - Documentation
 
-A **Streamlit-based web application** for tracking and analyzing Fantasy Premier League (FPL) draft league performance. Monitor team standings, gameweek stats, player performance, and upcoming fixtures in a centralized dashboard.
+> **Note:** This is the detailed documentation. For a quick start, see the [main README](../README.md) in the project root.
+
+A **Streamlit-based web application** for tracking and analyzing Fantasy Premier League (FPL) draft league performance with **Medallion Architecture** integration. Monitor team standings, gameweek stats, player performance, and upcoming fixtures in a centralized dashboard.
 
 ## 🎯 Features
 
 - **Dashboard Overview** - League standings, upcoming fixtures, and deadline countdown
+- **Medallion Architecture** - Gold layer star schema with fact/dimension tables
 - **Manager Pages** - Individual dashboards for each manager with detailed statistics
 - **Performance Tracking** - Gameweek-by-gameweek points progression and comparisons
-- **Player Analytics** - Top performers, player progression over time, positional analysis
-- **Data Updates** - Trigger ETL pipeline directly from the UI to refresh data from FPL API
+- **Player Analytics** - Top performers, clustering, positional analysis, and trends
+- **FPL-Style Pitch Visualization** - Enhanced squad view with fixtures and formations
+- **Data Refresh** - Manual refresh button and ETL pipeline trigger
 - **Interactive Visualizations** - Plotly charts for points trends, position distribution, and more
 
 ## 🚀 Quick Start
@@ -250,5 +254,18 @@ For issues or questions:
 
 ---
 
-**Last Updated:** January 2026  
-**Version:** 1.0.0
+## 📦 What's New in v2.0.0 (Feb 2026)
+
+- ✅ Medallion architecture integration with Gold layer
+- ✅ Enhanced FPL-style pitch visualization
+- ✅ Column name refactoring (180+ updates)
+- ✅ Data refresh system with cache clearing
+- ✅ Backend compatibility layer
+- ✅ Main README in project root
+
+See [CHANGELOG.md](CHANGELOG.md) for full release notes.
+
+---
+
+**Last Updated:** February 7, 2026  
+**Version:** 2.0.0
