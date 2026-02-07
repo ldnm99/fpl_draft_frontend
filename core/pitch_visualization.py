@@ -275,8 +275,8 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         formation = detect_formation(starting_xi)
         position_coords = get_formation_positions(formation)
         
-        # Calculate total gameweek points
-        total_gw_points = int(squad_df['gw_points'].sum())
+        # Calculate total gameweek points (starting XI only, excluding bench)
+        total_gw_points = int(starting_xi['gw_points'].sum())
         
         # Build enhanced HTML with FPL styling
         html_content = f"""
@@ -437,20 +437,50 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 letter-spacing: 1px;
             }}
             
-            .bench-players {{
+            .bench-row {{
                 display: flex;
-                flex-wrap: wrap;
-                gap: 15px;
                 justify-content: center;
+                align-items: stretch;
+                gap: 8px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }}
+            
+            .bench-unit {{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-width: 120px;
+            }}
+            
+            .bench-position-label {{
+                background: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 12px;
+                font-weight: 700;
+                padding: 6px 12px;
+                border-radius: 4px 4px 0 0;
+                text-align: center;
+                width: 100%;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }}
             
             .bench-player {{
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 0 0 4px 4px;
+                padding: 15px 10px;
                 text-align: center;
-                transition: transform 0.2s;
+                transition: all 0.2s;
+                width: 100%;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-top: none;
             }}
             
             .bench-player:hover {{
                 transform: scale(1.05);
+                background: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             }}
             
             .bench-shirt {{
@@ -458,7 +488,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 height: 79px;
                 object-fit: contain;
                 filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-                margin-bottom: 4px;
+                margin-bottom: 6px;
             }}
             
             .formation-badge {{
@@ -545,10 +575,19 @@ def display_squad_pitch(manager_df: pd.DataFrame):
             html_content += """
             <div class="bench-section">
                 <div class="bench-title">⬇️ Bench</div>
-                <div class="bench-players">
+                <div class="bench-row">
             """
             
-            for _, player in bench.iterrows():
+            # Sort bench by team_position to ensure correct order
+            bench_sorted = bench.sort_values('team_position')
+            
+            # Position labels: GK for first bench (position 12), then 1, 2, 3 for positions 13-15
+            position_labels = {12: 'GK', 13: '1', 14: '2', 15: '3'}
+            
+            for _, player in bench_sorted.iterrows():
+                bench_position = int(player['team_position'])
+                position_label = position_labels.get(bench_position, str(bench_position - 11))
+                
                 points = player['gw_points']
                 points_class = "" if points > 0 else ("zero" if points == 0 else "negative")
                 
@@ -562,14 +601,21 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 
                 player_name = str(player['player_name']).split()[-1] if len(str(player['player_name']).split()) > 1 else str(player['player_name'])
                 fixture_display = get_fixture_display(player)
-                fixture_html = f'<div class="player-fixture">{fixture_display}</div>' if fixture_display else ''
+                
+                # Show fixture if available, otherwise show points
+                if fixture_display:
+                    value_html = f'<div class="player-fixture">{fixture_display}</div>'
+                else:
+                    value_html = f'<div class="player-points {points_class}">{int(points)}</div>'
                 
                 html_content += f"""
-                <div class="bench-player">
-                    {shirt_html}
-                    <div class="player-name">{player_name[:10]}</div>
-                    {fixture_html}
-                    <div class="player-points {points_class}">{int(points)}</div>
+                <div class="bench-unit">
+                    <div class="bench-position-label">{position_label}</div>
+                    <div class="bench-player">
+                        {shirt_html}
+                        <div class="player-name">{player_name[:12]}</div>
+                        {value_html}
+                    </div>
                 </div>
                 """
             
