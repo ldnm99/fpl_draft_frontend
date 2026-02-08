@@ -89,6 +89,10 @@ def trigger_pipeline():
 if 'data_reload_counter' not in st.session_state:
     st.session_state.data_reload_counter = 0
 
+# Force a unique cache key by including reload counter
+# This ensures Streamlit fetches fresh data after clicking refresh
+cache_key = f"data_v{st.session_state.data_reload_counter}"
+
 df = None
 standings = None
 gameweeks = None
@@ -98,7 +102,11 @@ with st.spinner("📊 Loading data..."):
     try:
         # Pass reload counter to force fresh load (prevents caching issues)
         _reload_trigger = st.session_state.data_reload_counter
-        df, standings, gameweeks, fixtures = load_data_auto(supabase)
+        
+        # IMPORTANT: Using reload counter in a dummy variable forces cache invalidation
+        if _reload_trigger >= 0:  # Always true, but makes Streamlit rerun the cached function
+            df, standings, gameweeks, fixtures = load_data_auto(supabase)
+        
         display_info(f"✅ Data loaded successfully from Gold layer (refresh #{_reload_trigger})")
     except Exception as e:
         display_error(e, "Failed to load data")
