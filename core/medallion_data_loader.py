@@ -52,13 +52,21 @@ def _download_parquet(supabase, bucket: str, file_path: str, file_name: str = No
     display_name = file_name or file_path.split('/')[-1]
     
     try:
-        data = safe_download_file(supabase, bucket, file_path, "parquet")
+        # Force fresh download by always cache-busting
+        data = safe_download_file(supabase, bucket, file_path, "parquet", cache_bust=True)
         
         if not data:
             raise SupabaseDownloadError(f"No data received for {display_name}")
         
         df = pd.read_parquet(io.BytesIO(data))
         logger.info(f"Loaded {display_name}: {len(df)} rows, {len(df.columns)} columns")
+        
+        # Log sample to verify fresh data
+        if 'player_id' in df.columns and 'gameweek' in df.columns:
+            salah_gw25 = df[(df['player_id'] == 381) & (df['gameweek'] == 25)]
+            if not salah_gw25.empty:
+                logger.info(f"✅ Data verification - Salah GW25: {salah_gw25['gw_points'].values[0]} points")
+        
         return df
         
     except Exception as e:
