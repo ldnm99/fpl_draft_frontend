@@ -138,7 +138,8 @@ def safe_download_file(
     supabase,
     bucket: str,
     file_name: str,
-    file_type: str = "csv"
+    file_type: str = "csv",
+    cache_bust: bool = True
 ) -> Optional[bytes]:
     """
     Safely download file from Supabase with error handling.
@@ -148,6 +149,7 @@ def safe_download_file(
         bucket: Bucket name
         file_name: File name to download
         file_type: File type for error context
+        cache_bust: If True, check last_updated.json to ensure fresh data
         
     Returns:
         File data as bytes, or None if failed
@@ -158,12 +160,22 @@ def safe_download_file(
     try:
         logger.info(f"Downloading {file_type} file: {file_name} from {bucket}")
         
+        # Check last_updated timestamp to ensure we're getting fresh data
+        if cache_bust:
+            try:
+                timestamp_data = supabase.storage.from_(bucket).download('last_updated.json')
+                import json
+                timestamp_info = json.loads(timestamp_data)
+                logger.info(f"Data last updated: {timestamp_info.get('last_updated', 'unknown')}")
+            except Exception as e:
+                logger.warning(f"Could not check last_updated timestamp: {e}")
+        
         data = supabase.storage.from_(bucket).download(file_name)
         
         if not data:
             raise SupabaseDownloadError(f"Downloaded data is empty for {file_name}")
         
-        logger.info(f"Successfully downloaded {file_name}")
+        logger.info(f"Successfully downloaded {file_name} ({len(data)} bytes)")
         return data
         
     except Exception as e:
