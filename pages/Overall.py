@@ -10,6 +10,8 @@ from core.data_utils import (
     calculate_team_gw_points, 
     get_teams_avg_points
 )
+from core.visuals_utils import display_league_optimized_lineups
+from core.mobile_utils import add_mobile_css, get_metric_columns, optimize_chart_height
 
 # ============================================================
 #                    PAGE CONFIGURATION
