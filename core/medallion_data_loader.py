@@ -91,14 +91,22 @@ def load_dimensions(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
     
     dimensions = {}
     
+    # Dimensions that are optional — empty is acceptable (used as fallback only)
+    optional_dims = {'fixtures'}
+
     for dim_name, path in GOLD_DIMENSIONS.items():
         try:
             df = _download_parquet(supabase, bucket, path, f"dim_{dim_name}")
-            validate_dataframe(df, f"dim_{dim_name}", min_rows=1)
+            min_rows = 0 if dim_name in optional_dims else 1
+            validate_dataframe(df, f"dim_{dim_name}", min_rows=min_rows)
             dimensions[dim_name] = df
         except Exception as e:
-            logger.error(f"Failed to load dimension {dim_name}: {str(e)}")
-            raise SupabaseError(f"Failed to load dim_{dim_name}: {str(e)}")
+            if dim_name in optional_dims:
+                logger.warning(f"Optional dimension {dim_name} unavailable, using empty fallback: {e}")
+                dimensions[dim_name] = pd.DataFrame()
+            else:
+                logger.error(f"Failed to load dimension {dim_name}: {str(e)}")
+                raise SupabaseError(f"Failed to load dim_{dim_name}: {str(e)}")
     
     logger.info(f"Successfully loaded {len(dimensions)} dimension tables")
     return dimensions
