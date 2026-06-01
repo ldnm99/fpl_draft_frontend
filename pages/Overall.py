@@ -2,16 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from config.supabase_client import supabase
+from config.settings import OWNER, REPO, BUCKET, TOKEN
 from core.data_utils import (
-    load_data_supabase, 
+    load_data_auto,
     get_starting_lineup, 
     calculate_team_gw_points, 
     get_teams_avg_points
 )
-from core.visuals_utils import display_league_optimized_lineups
-from core.mobile_utils import add_mobile_css, get_metric_columns, optimize_chart_height
-from supabase import create_client
-from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
 
 # ============================================================
 #                    PAGE CONFIGURATION
@@ -24,14 +22,8 @@ add_mobile_css()  # Add mobile optimizations
 #                    DATA LOADING
 # ============================================================
 
-OWNER = "ldnm99"
-REPO = "FPL-ETL"
-TOKEN = st.secrets["TOKEN_STREAMLIT"]
-BUCKET = "data"
-
 try:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-    df, standings, gameweeks, fixtures = load_data_supabase(supabase)
+    df, standings, gameweeks, fixtures = load_data_auto(supabase)
 except Exception as e:
     st.error(f"Failed to load data: {str(e)}")
     st.stop()

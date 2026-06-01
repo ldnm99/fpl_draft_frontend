@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timezone
 from supabase import create_client
 from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
+from config.settings import OWNER, REPO, BUCKET, TOKEN
 
 from core.data_utils import (
     get_next_gameweek,
@@ -33,11 +34,6 @@ add_mobile_css()  # Add mobile optimizations
 # ========================================================================
 # SUPABASE CLIENT INITIALIZATION
 # ========================================================================
-OWNER = "ldnm99"
-REPO = "FPL-ETL"
-TOKEN = st.secrets.get("TOKEN_STREAMLIT")
-
-BUCKET = "data"
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 if not TOKEN:
