@@ -250,7 +250,10 @@ with nav_col2:
             
             st.write(f"⏳ **{days}d {hours}h {minutes}m**")
         else:
-            st.info("🏁 No upcoming deadlines")
+            last_gw = gameweeks.iloc[-1]
+            st.success("🏆 **Season Complete!**")
+            st.write(f"Final gameweek: **{last_gw['name']}**")
+            st.write(f"Ended: {last_gw['deadline_time'].strftime('%d %b %Y')}")
     except Exception as e:
         logger.warning(f"Failed to display deadline: {str(e)}")
         st.info("📅 Deadline info unavailable")
