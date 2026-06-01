@@ -98,15 +98,15 @@ standings = None
 gameweeks = None
 fixtures = None
 
+@st.cache_data(ttl=300)
+def _load_data_cached(_supabase, reload_counter: int):
+    """Load data from Supabase. Cache busts when reload_counter changes."""
+    return load_data_auto(_supabase)
+
 with st.spinner("📊 Loading data..."):
     try:
-        # Pass reload counter to force fresh load (prevents caching issues)
         _reload_trigger = st.session_state.data_reload_counter
-        
-        # IMPORTANT: Using reload counter in a dummy variable forces cache invalidation
-        if _reload_trigger >= 0:  # Always true, but makes Streamlit rerun the cached function
-            df, standings, gameweeks, fixtures = load_data_auto(supabase)
-        
+        df, standings, gameweeks, fixtures = _load_data_cached(supabase, _reload_trigger)
         display_info(f"✅ Data loaded successfully from Gold layer (refresh #{_reload_trigger})")
     except Exception as e:
         display_error(e, "Failed to load data")
@@ -117,15 +117,15 @@ if df is None or df.empty:
     display_warning("No player data available")
     st.stop()
 
-if standings is None or standings.empty:
-    display_warning("No standings data available")
-
 if gameweeks is None or gameweeks.empty:
     display_warning("No gameweeks data available")
     st.stop()
 
+if standings is None or standings.empty:
+    display_warning("Standings data unavailable — some sections may be limited")
+
 if fixtures is None or fixtures.empty:
-    display_warning("No fixtures data available")
+    display_warning("Fixtures data unavailable")
 
 # ========================================================================
 # CALCULATE GAMEWEEK INFO & STANDINGS
