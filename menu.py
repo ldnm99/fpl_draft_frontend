@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timezone
 from supabase import create_client
 from config.supabase_client import SUPABASE_URL, SUPABASE_KEY
-from config.settings import OWNER, REPO, BUCKET, TOKEN
+from config.settings import OWNER, REPO, BUCKET, SEASON_PREFIX, TOKEN
 
 from core.data_utils import (
     get_next_gameweek,
@@ -79,21 +79,6 @@ def trigger_pipeline():
         raise
 
 # ========================================================================
-# SEASON SELECTOR (SIDEBAR)
-# ========================================================================
-st.sidebar.markdown("### 🗓️ Season")
-season_options = {
-    "2025/2026 (Dobradinha - League 38279)": {"bucket": "data", "prefix": "2025_2026/"},
-    "2024/2025 (Archive - League 24636)": {"bucket": "data", "prefix": ""},
-}
-selected_season_name = st.sidebar.selectbox(
-    "Select Season",
-    options=list(season_options.keys()),
-    index=0
-)
-selected_config = season_options[selected_season_name]
-
-# ========================================================================
 # LOAD DATA
 # ========================================================================
 # Initialize session state for data reload trigger
@@ -117,9 +102,9 @@ with st.spinner("📊 Loading data..."):
     try:
         _reload_trigger = st.session_state.data_reload_counter
         df, standings, gameweeks, fixtures = _load_data_cached(
-            supabase, _reload_trigger, selected_config["bucket"], selected_config["prefix"]
+            supabase, _reload_trigger, BUCKET, SEASON_PREFIX
         )
-        display_info(f"✅ Loaded {selected_season_name}")
+        display_info(f"✅ Data loaded successfully from Gold layer (refresh #{_reload_trigger})")
     except Exception as e:
         display_error(e, "Failed to load data")
         st.stop()
