@@ -79,6 +79,21 @@ def trigger_pipeline():
         raise
 
 # ========================================================================
+# SEASON SELECTOR (SIDEBAR)
+# ========================================================================
+st.sidebar.markdown("### 🗓️ Season")
+season_options = {
+    "2025/2026 (Dobradinha - League 38279)": {"bucket": "data", "prefix": "2025_2026/"},
+    "2024/2025 (Archive - League 24636)": {"bucket": "data", "prefix": ""},
+}
+selected_season_name = st.sidebar.selectbox(
+    "Select Season",
+    options=list(season_options.keys()),
+    index=0
+)
+selected_config = season_options[selected_season_name]
+
+# ========================================================================
 # LOAD DATA
 # ========================================================================
 # Initialize session state for data reload trigger
@@ -86,7 +101,6 @@ if 'data_reload_counter' not in st.session_state:
     st.session_state.data_reload_counter = 0
 
 # Force a unique cache key by including reload counter
-# This ensures Streamlit fetches fresh data after clicking refresh
 cache_key = f"data_v{st.session_state.data_reload_counter}"
 
 df = None
@@ -95,15 +109,17 @@ gameweeks = None
 fixtures = None
 
 @st.cache_data(ttl=300)
-def _load_data_cached(_supabase, reload_counter: int):
-    """Load data from Supabase. Cache busts when reload_counter changes."""
-    return load_data_auto(_supabase)
+def _load_data_cached(_supabase, reload_counter: int, bucket_name: str, path_prefix: str):
+    """Load data from Supabase. Cache busts when reload_counter, bucket_name, or path_prefix changes."""
+    return load_data_auto(_supabase, bucket=bucket_name, path_prefix=path_prefix)
 
 with st.spinner("📊 Loading data..."):
     try:
         _reload_trigger = st.session_state.data_reload_counter
-        df, standings, gameweeks, fixtures = _load_data_cached(supabase, _reload_trigger)
-        display_info(f"✅ Data loaded successfully from Gold layer (refresh #{_reload_trigger})")
+        df, standings, gameweeks, fixtures = _load_data_cached(
+            supabase, _reload_trigger, selected_config["bucket"], selected_config["prefix"]
+        )
+        display_info(f"✅ Loaded {selected_season_name}")
     except Exception as e:
         display_error(e, "Failed to load data")
         st.stop()

@@ -31,6 +31,7 @@ except ImportError:
 def load_data_auto(
     supabase,
     bucket="data",
+    path_prefix="",
     local_gameweeks="Data/gameweeks.csv",
     local_fixtures="Data/fixtures.csv"
 ):
@@ -40,6 +41,7 @@ def load_data_auto(
     Args:
         supabase: Supabase client instance
         bucket: Storage bucket name
+        path_prefix: Storage path prefix (e.g. '2025_2026/')
         local_gameweeks: Path to local gameweeks CSV
         local_fixtures: Path to local fixtures CSV
     
@@ -56,6 +58,7 @@ def load_data_auto(
     return load_data_medallion(
         supabase=supabase,
         bucket=bucket,
+        path_prefix=path_prefix,
         local_gameweeks=local_gameweeks,
         local_fixtures=local_fixtures
     )

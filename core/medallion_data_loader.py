@@ -79,7 +79,7 @@ def _download_parquet(supabase, bucket: str, file_path: str, file_name: str = No
 # ============================================================
 #                   LOAD DIMENSIONS
 # ============================================================
-def load_dimensions(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
+def load_dimensions(supabase, bucket: str = "data", path_prefix: str = "") -> Dict[str, pd.DataFrame]:
     """
     Load all dimension tables from Gold layer.
     
@@ -90,13 +90,12 @@ def load_dimensions(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
     logger.info("Loading dimension tables...")
     
     dimensions = {}
-    
-    # Dimensions that are optional — empty is acceptable (used as fallback only)
     optional_dims = {'fixtures'}
 
-    for dim_name, path in GOLD_DIMENSIONS.items():
+    for dim_name, rel_path in GOLD_DIMENSIONS.items():
         try:
-            df = _download_parquet(supabase, bucket, path, f"dim_{dim_name}")
+            full_path = f"{path_prefix}{rel_path}" if path_prefix else rel_path
+            df = _download_parquet(supabase, bucket, full_path, f"dim_{dim_name}")
             min_rows = 0 if dim_name in optional_dims else 1
             validate_dataframe(df, f"dim_{dim_name}", min_rows=min_rows)
             dimensions[dim_name] = df
@@ -115,7 +114,7 @@ def load_dimensions(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
 # ============================================================
 #                   LOAD FACTS
 # ============================================================
-def load_facts(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
+def load_facts(supabase, bucket: str = "data", path_prefix: str = "") -> Dict[str, pd.DataFrame]:
     """
     Load all fact tables from Gold layer.
     
@@ -127,10 +126,11 @@ def load_facts(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
     
     facts = {}
     
-    for fact_name, path in GOLD_FACTS.items():
+    for fact_name, rel_path in GOLD_FACTS.items():
         try:
-            df = _download_parquet(supabase, bucket, path, f"fact_{fact_name}")
-            validate_dataframe(df, f"fact_{fact_name}", min_rows=1)
+            full_path = f"{path_prefix}{rel_path}" if path_prefix else rel_path
+            df = _download_parquet(supabase, bucket, full_path, f"fact_{fact_name}")
+            validate_dataframe(df, f"fact_{fact_name}", min_rows=0)
             facts[fact_name] = df
         except Exception as e:
             logger.error(f"Failed to load fact {fact_name}: {str(e)}")
@@ -143,7 +143,7 @@ def load_facts(supabase, bucket: str = "data") -> Dict[str, pd.DataFrame]:
 # ============================================================
 #                   LOAD COMPLETE GOLD LAYER
 # ============================================================
-def load_gold_layer(supabase, bucket: str = "data") -> Tuple[Dict[str, pd.DataFrame], Dict[str, pd.DataFrame]]:
+def load_gold_layer(supabase, bucket: str = "data", path_prefix: str = "") -> Tuple[Dict[str, pd.DataFrame], Dict[str, pd.DataFrame]]:
     """
     Load complete Gold layer with all dimensions and facts.
     
@@ -153,8 +153,8 @@ def load_gold_layer(supabase, bucket: str = "data") -> Tuple[Dict[str, pd.DataFr
     logger.info("Loading complete Gold layer (medallion schema)...")
     
     try:
-        dimensions = load_dimensions(supabase, bucket)
-        facts = load_facts(supabase, bucket)
+        dimensions = load_dimensions(supabase, bucket, path_prefix)
+        facts = load_facts(supabase, bucket, path_prefix)
         
         logger.info("✅ Gold layer loaded successfully")
         return dimensions, facts
@@ -322,6 +322,7 @@ def normalize_backend_columns(df: pd.DataFrame) -> pd.DataFrame:
 def load_data_medallion(
     supabase,
     bucket: str = "data",
+    path_prefix: str = "",
     local_gameweeks: str = "Data/gameweeks.csv",
     local_fixtures: str = "Data/fixtures.csv"
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -337,7 +338,7 @@ def load_data_medallion(
     
     try:
         # Load Gold layer
-        dimensions, facts = load_gold_layer(supabase, bucket)
+        dimensions, facts = load_gold_layer(supabase, bucket, path_prefix)
         
         # Use manager_gw_performance fact which already has player data joined
         gw_data = facts['manager_gw_performance'].copy()

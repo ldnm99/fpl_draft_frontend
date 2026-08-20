@@ -2,9 +2,11 @@
 # Import from here rather than defining inline in each page.
 import streamlit as st
 
+import os
+
 OWNER = "ldnm99"
 REPO = "FPL-ETL"
-BUCKET = "data"
+BUCKET = st.secrets.get("STORAGE_BUCKET") or os.getenv("STORAGE_BUCKET", "data-2025-2026")
 
 # GitHub token — stored in Streamlit secrets
 TOKEN = st.secrets.get("TOKEN_STREAMLIT")
