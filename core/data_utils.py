@@ -14,6 +14,8 @@ from core.error_handler import (
     get_logger
 )
 
+from config.settings import BUCKET as DEFAULT_BUCKET, SEASON_PREFIX as DEFAULT_SEASON_PREFIX
+
 logger = get_logger(__name__)
 
 # Try to import medallion loader, fall back to legacy if not available
@@ -30,8 +32,8 @@ except ImportError:
 # ============================================================
 def load_data_auto(
     supabase,
-    bucket="data",
-    path_prefix="",
+    bucket=None,
+    path_prefix=None,
     local_gameweeks="Data/gameweeks.csv",
     local_fixtures="Data/fixtures.csv"
 ):
@@ -40,8 +42,8 @@ def load_data_auto(
     
     Args:
         supabase: Supabase client instance
-        bucket: Storage bucket name
-        path_prefix: Storage path prefix (e.g. '2025_2026/')
+        bucket: Storage bucket name (defaults to settings BUCKET)
+        path_prefix: Storage path prefix (defaults to settings SEASON_PREFIX)
         local_gameweeks: Path to local gameweeks CSV
         local_fixtures: Path to local fixtures CSV
     
@@ -51,10 +53,15 @@ def load_data_auto(
     Raises:
         Exception: If Gold layer cannot be loaded
     """
+    if bucket is None:
+        bucket = DEFAULT_BUCKET
+    if path_prefix is None:
+        path_prefix = DEFAULT_SEASON_PREFIX
+
     if not MEDALLION_AVAILABLE:
         raise ImportError("Medallion data loader not available. Please check core/medallion_data_loader.py exists.")
     
-    logger.info("Loading data from medallion schema (Gold layer)...")
+    logger.info(f"Loading data from medallion schema (Gold layer) [bucket={bucket}, path_prefix={path_prefix}]...")
     return load_data_medallion(
         supabase=supabase,
         bucket=bucket,
@@ -69,7 +76,8 @@ def load_data_auto(
 # ============================================================
 def load_data_supabase(
     supabase,
-    bucket="data",
+    bucket=None,
+    path_prefix=None,
     local_gameweeks="Data/gameweeks.csv",
     local_fixtures="Data/fixtures.csv"
 ):
@@ -78,7 +86,13 @@ def load_data_supabase(
     This is a compatibility wrapper that calls load_data_auto().
     """
     logger.warning("load_data_supabase() is deprecated. Use load_data_auto() instead.")
-    return load_data_auto(supabase, bucket, local_gameweeks, local_fixtures)
+    return load_data_auto(
+        supabase=supabase,
+        bucket=bucket,
+        path_prefix=path_prefix,
+        local_gameweeks=local_gameweeks,
+        local_fixtures=local_fixtures
+    )
 
 
 # ============================================================
