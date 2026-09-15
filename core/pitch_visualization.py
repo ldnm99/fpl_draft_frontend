@@ -277,6 +277,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
         
         # Calculate total gameweek points (starting XI only, excluding bench)
         total_gw_points = int(starting_xi['gw_points'].sum())
+        avg_gw_points = round(total_gw_points / len(starting_xi), 1) if len(starting_xi) > 0 else 0
         
         # Build enhanced HTML with FPL styling
         html_content = f"""
@@ -420,6 +421,11 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 color: white;
             }}
             
+            .player-points.unplayed {{
+                background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+                color: #cbd5e0;
+            }}
+            
             .bench-section {{
                 background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
                 padding: 20px;
@@ -516,7 +522,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
             <div class="points-scoreboard">
                 <h4 class="points-heading">Gameweek Points</h4>
                 <div class="points-value">{total_gw_points}</div>
-                <div class="points-label">Total Points GW {int(selected_gw)}</div>
+                <div class="points-label">Total Points GW {int(selected_gw)} • Avg / Player: {avg_gw_points} pts</div>
             </div>
             <div class="formation-badge">Formation: {formation}</div>
             <div class="pitch-wrapper">
@@ -532,9 +538,13 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 if idx < len(coords):
                     x_pct, y_pct = coords[idx]
                     points = player['gw_points']
+                    has_no_minutes = ('minutes' in player and player['minutes'] == 0)
+                    display_points = "-" if has_no_minutes else str(int(points))
                     
                     # Determine points class
-                    if points > 0:
+                    if has_no_minutes:
+                        points_class = "unplayed"
+                    elif points > 0:
                         points_class = ""
                     elif points == 0:
                         points_class = "zero"
@@ -560,7 +570,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                         {shirt_html}
                         <div class="player-name">{player_name[:12]}</div>
                         {fixture_html}
-                        <div class="player-points {points_class}">{int(points)}</div>
+                        <div class="player-points {points_class}">{display_points}</div>
                     </div>
                     """
         
@@ -589,7 +599,9 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 position_label = position_labels.get(bench_position, str(bench_position - 11))
                 
                 points = player['gw_points']
-                points_class = "" if points > 0 else ("zero" if points == 0 else "negative")
+                has_no_minutes = ('minutes' in player and player['minutes'] == 0)
+                display_points = "-" if has_no_minutes else str(int(points))
+                points_class = "unplayed" if has_no_minutes else ("" if points > 0 else ("zero" if points == 0 else "negative"))
                 
                 # Get kit image using short_name
                 kit_base64 = get_kit_base64(player['short_name'])
@@ -606,7 +618,7 @@ def display_squad_pitch(manager_df: pd.DataFrame):
                 if fixture_display:
                     value_html = f'<div class="player-fixture">{fixture_display}</div>'
                 else:
-                    value_html = f'<div class="player-points {points_class}">{int(points)}</div>'
+                    value_html = f'<div class="player-points {points_class}">{display_points}</div>'
                 
                 html_content += f"""
                 <div class="bench-unit">
